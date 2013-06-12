@@ -118,8 +118,8 @@ else:
 
 if __name__ == "__main__":
 
-    root = Tk()
-    root.title("rdesktop-open.py: RDesktop Frontend")
+    root = Tk(className='rdesktop-opener')
+    root.title("rdesktop-opener")
 
     menuFrameTop = Frame(root,relief=RIDGE,bd=2)
     menuFrameTop.pack(side=TOP,fill=X)
