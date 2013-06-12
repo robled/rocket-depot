@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 
-# rdp-start.py Cory Wright, Public Domain Software
-# $Id: rdesktop-open.py,v 1.6 2003/02/04 19:34:07 cwright Exp $
+# Originally written by Cory Wright
+# http://projects.standblue.net/software/#rdesktop-open
 
 from Tkinter import *
 import os, string
@@ -210,5 +210,4 @@ if __name__ == "__main__":
 
     root.mainloop()
 
-print "rdesktop-open.py -- http://projects.standblue.net/software/"
-print "Cory Wright, Stand Blue Technology -- $Date: 2003/02/04 19:34:07 $"
+print "rdesktop-opener.py -- https://github.com/robled/rdesktop-opener"
