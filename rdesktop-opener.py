@@ -13,16 +13,13 @@ else:
 
 options = { "host"       : "host.example.com",
             "user"       : user,
-            "resolution" : "85%",
+            "resolution" : "85",
             "pass"       : "",
             "domain"     : "",
             "fullscreen" : 0,
             "grabkeyboard"    : 0 }
 
 optlist = ("host","user","resolution","domain","fullscreen","grabkeyboard")
-
-screens = ['85%', '1280x800', '1600x900']
-screenl = ['85%', '1280 X 800', '1600 X 900']
 
 configfile = "%s/.rdesktop-open" % os.environ['HOME']
 
@@ -35,18 +32,14 @@ def popup_alert(title,textmsg):
 def save_conf():
     # host, user name, resolution, domain, fullscreen (0,1), grab keyboard (0,1)
     conf = open(configfile,"w")
-    try:
-        saveres = string.atoi(listbox.curselection()[0])
-    except IndexError:
-        saveres = 0
-    screen = screens[saveres]
-    ofline = "%s,%s,%s,," % (textHost.get(),textUsername.get(),screen)
+    geometry = string.strip(textGeometry.get())
+    ofline = "%s,%s,%s,," % (textHost.get(),textUsername.get(),geometry)
     ofline = ofline + "%s,%s\n" % (varFs.get(),varGrabKeyboard.get())
     conf.write(ofline)
     conf.close()
 
 def open_url(url):
-    os.spawnvp("P_NOWAIT","mozilla",('mozilla',url))
+    os.spawnvp("P_NOWAIT","x-www-browser",('x-www-browser',url))
     return
 
 def open_rdesktop_site():
@@ -55,6 +48,10 @@ def open_rdesktop_site():
 
 def open_rdo_site():
     open_url("http://projects.standblue.net/software/")
+    return
+
+def open_rdoer_site():
+    open_url("https://github.com/robled/rdesktop-opener/")
     return
 
 def run_rdesktop():
@@ -69,15 +66,9 @@ def run_rdesktop():
     if(textPassword.get() != ""):
         params.append("-p")
         params.append("%s" % string.strip(textPassword.get()))
-    try:
-        screenIndex = string.atoi(listbox.curselection()[0])
-    except IndexError:
-        screen = screens[0]
-    else:
-        screen = screens[screenIndex]
-    if(screen != ""):
+    if(textGeometry.get() != ""):
         params.append("-g")
-        params.append("%s" % screen)
+        params.append("%s" % string.strip(textGeometry.get()) + '%')
     if(varFs.get() == 1):
         params.append("-f")
     if(varGrabKeyboard.get() == 0):
@@ -96,7 +87,7 @@ def print_options():
     print "-- currently selected options --"
     print "host => " + textHost.get()
     print "user => " + textUsername.get()
-    print "resolution => " + screens[string.atoi(listbox.curselection()[0])]
+    print "resolution => " + textGeometry.get()
     print "pass => " + textPassword.get()
     print "domain => "
     print "fullscreen => " + str(varFs.get())
@@ -142,6 +133,7 @@ if __name__ == "__main__":
     menuHelpDropdown = Menu(menuHelpButton,relief=RIDGE)
     menuHelpDropdown.add_command(label="RDesktop Homepage",underline=0,command=open_rdesktop_site)
     menuHelpDropdown.add_command(label="rdesktop-open Homepage",underline=9,command=open_rdo_site)
+    menuHelpDropdown.add_command(label="rdesktop-opener GitHub",underline=9,command=open_rdoer_site)
     menuHelpButton.config(menu=menuHelpDropdown)
 
     # Create the area for hosts
@@ -184,24 +176,13 @@ if __name__ == "__main__":
     rightFrame.pack(side=TOP)
 
     # Create the area and the scrolldown for resolution
-    frameResolution = Frame(root)
-    labelResolution = Label(frameResolution,width=9,text='Screen')
-    selectResolution = Listbox(frameResolution, relief=RIDGE, height=3)
-
-    tcount = 0
-    defres = 0
-    for size in screenl:
-        if screens[tcount] == options['resolution']:
-            defres = tcount
-        selectResolution.insert('end',size)
-        tcount = tcount + 1
-
-    selectResolution.select_set(defres)
-    listbox = selectResolution
-
-    frameResolution.pack(side=TOP, fill=X)
-    labelResolution.pack(side=LEFT)
-    selectResolution.pack(side=LEFT, fill=Y)
+    frameGeometry = Frame(root)
+    labelGeometry = Label(frameGeometry,width=9,text='Geometry %')
+    textGeometry = Entry(frameGeometry, width=3)
+    textGeometry.insert(0,options['resolution'])
+    frameGeometry.pack(side=TOP, fill=X)
+    labelGeometry.pack(side=LEFT)
+    textGeometry.pack(side=LEFT, expand=NO)
 
     frameButtons = Frame(root)
     frameButtons.pack(side=BOTTOM)
