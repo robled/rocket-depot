@@ -24,7 +24,7 @@ optlist = ("host","user","resolution","domain","fullscreen","grabkeyboard")
 configfile = "%s/.rdesktop-open" % os.environ['HOME']
 
 def popup_alert(title,textmsg):
-    alert = Tk()
+    alert = Tk(className='rdesktop-opener')
     alert.title("Notice: "+title)
     Label(alert,text="Notice: "+textmsg).pack()
     alert.mainloop()
