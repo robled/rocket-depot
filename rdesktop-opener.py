@@ -11,15 +11,16 @@ if os.environ.has_key('USER'):
 else:
     user = "username"
 
-options = { "host"       : "host.example.com",
-            "user"       : user,
-            "resolution" : "85",
-            "pass"       : "",
-            "domain"     : "",
-            "fullscreen" : 0,
-            "grabkeyboard"    : 0 }
+options = { "host"          : "host.example.com",
+            "user"          : user,
+            "resolution"    : "85",
+            "pass"          : "",
+            "domain"        : "",
+            "fullscreen"    : 0,
+            "grabkeyboard"  : 0,
+            "homeshare"     : 0 }
 
-optlist = ("host","user","resolution","domain","fullscreen","grabkeyboard")
+optlist = ("host","user","resolution","domain","fullscreen","grabkeyboard","homeshare")
 
 configfile = "%s/.rdesktop-open" % os.environ['HOME']
 
@@ -30,11 +31,11 @@ def popup_alert(title,textmsg):
     alert.mainloop()
 
 def save_conf():
-    # host, user name, resolution, domain, fullscreen (0,1), grab keyboard (0,1)
+    # host, user name, resolution, domain, fullscreen (0,1), grab keyboard (0,1), homeshare (0,1)
     conf = open(configfile,"w")
     geometry = string.strip(textGeometry.get())
     ofline = "%s,%s,%s,," % (textHost.get(),textUsername.get(),geometry)
-    ofline = ofline + "%s,%s\n" % (varFs.get(),varGrabKeyboard.get())
+    ofline = ofline + "%s,%s,%s\n" % (varFs.get(),varGrabKeyboard.get(),varHomeShare.get())
     conf.write(ofline)
     conf.close()
 
@@ -73,6 +74,9 @@ def run_rdesktop():
         params.append("-f")
     if(varGrabKeyboard.get() == 0):
         params.append("-K")
+    if(varHomeShare.get() == 1):
+        params.append("-r")
+        params.append('disk:home=' + os.environ['HOME'])
     if(textHost.get() != ""):
         params.append("%s" % string.strip(textHost.get()))
 
@@ -92,6 +96,7 @@ def print_options():
     print "domain => "
     print "fullscreen => " + str(varFs.get())
     print "grabkeyboard => " + str(varGrabKeyboard.get())
+    print "homeshare => " + str(varHomeShare.get())
 
 try:
     conf = open(configfile,"r")
@@ -101,7 +106,7 @@ except IOError:
 else:
     if(conf):
         readconf = string.strip(conf.readline())
-        # host, user name, resolution, domain, fullscreen (0,1), grab keyboard (0,1)
+        # host, user name, resolution, domain, fullscreen (0,1), grab keyboard (0,1), homeshare (0,1)
         optindex = 0
         for opt in string.split(readconf,","):
             options[optlist[optindex]] = opt
@@ -173,6 +178,9 @@ if __name__ == "__main__":
     varGrabKeyboard = IntVar()
     varGrabKeyboard.set(options['grabkeyboard'])
     Checkbutton(rightFrame, text='Grab keyboard', variable=varGrabKeyboard).pack(side=RIGHT, expand=YES, fill=X)
+    varHomeShare = IntVar()
+    varHomeShare.set(options['homeshare'])
+    Checkbutton(rightFrame, text='Share Home Dir', variable=varHomeShare).pack(side=RIGHT, expand=YES, fill=X)
     rightFrame.pack(side=TOP)
 
     # Create the area and the scrolldown for resolution
