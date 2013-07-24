@@ -13,16 +13,15 @@ else:
 
 options = { "host"          : "host.example.com",
             "user"          : user,
-            "resolution"    : "85",
+            "resolution"    : "1024x768",
             "pass"          : "",
-            "domain"        : "",
             "fullscreen"    : 0,
             "grabkeyboard"  : 0,
             "homeshare"     : 0 }
 
-optlist = ("host","user","resolution","domain","fullscreen","grabkeyboard","homeshare")
+optlist = ("host","user","resolution","fullscreen","grabkeyboard","homeshare")
 
-configfile = "%s/.rdesktop-open" % os.environ['HOME']
+configfile = "%s/.rdesktop-opener" % os.environ['HOME']
 
 def popup_alert(title,textmsg):
     alert = Tk(className='rdesktop-opener')
@@ -31,10 +30,10 @@ def popup_alert(title,textmsg):
     alert.mainloop()
 
 def save_conf():
-    # host, user name, resolution, domain, fullscreen (0,1), grab keyboard (0,1), homeshare (0,1)
+    # host, user name, resolution, fullscreen (0,1), grab keyboard (0,1), homeshare (0,1)
     conf = open(configfile,"w")
     geometry = string.strip(textGeometry.get())
-    ofline = "%s,%s,%s,," % (textHost.get(),textUsername.get(),geometry)
+    ofline = "%s,%s,%s," % (textHost.get(),textUsername.get(),geometry)
     ofline = ofline + "%s,%s,%s\n" % (varFs.get(),varGrabKeyboard.get(),varHomeShare.get())
     conf.write(ofline)
     conf.close()
@@ -93,7 +92,6 @@ def print_options():
     print "user => " + textUsername.get()
     print "resolution => " + textGeometry.get()
     print "pass => " + textPassword.get()
-    print "domain => "
     print "fullscreen => " + str(varFs.get())
     print "grabkeyboard => " + str(varGrabKeyboard.get())
     print "homeshare => " + str(varHomeShare.get())
@@ -106,9 +104,10 @@ except IOError:
 else:
     if(conf):
         readconf = string.strip(conf.readline())
-        # host, user name, resolution, domain, fullscreen (0,1), grab keyboard (0,1), homeshare (0,1)
+        # host, user name, resolution, fullscreen (0,1), grab keyboard (0,1), homeshare (0,1)
         optindex = 0
         for opt in string.split(readconf,","):
+            print opt
             options[optlist[optindex]] = opt
             optindex = optindex + 1
 
