@@ -69,7 +69,7 @@ def run_rdesktop():
         params.append("%s" % string.strip(textPassword.get()))
     if(textGeometry.get() != ""):
         params.append("-g")
-        params.append("%s" % string.strip(textGeometry.get()) + '%')
+        params.append("%s" % string.strip(textGeometry.get()))
     if(varFs.get() == 1):
         params.append("-f")
     if(varGrabKeyboard.get() == 0):
@@ -170,6 +170,15 @@ if __name__ == "__main__":
     labelPassword.pack(side=LEFT)
     textPassword.pack(side=RIGHT, expand=YES, fill=X)
 
+    # Create the area for geometry
+    frameGeometry = Frame(root)
+    labelGeometry = Label(frameGeometry,width=9,text='Geometry')
+    textGeometry = Entry(frameGeometry, width=9)
+    textGeometry.insert(0,options['resolution'])
+    frameGeometry.pack(side=TOP, fill=X)
+    labelGeometry.pack(side=LEFT)
+    textGeometry.pack(side=LEFT, expand=NO)
+
     # Create the area for the full screen
     rightFrame = Frame(root)
     varFs = IntVar()
@@ -183,14 +192,6 @@ if __name__ == "__main__":
     Checkbutton(rightFrame, text='Share Home Dir', variable=varHomeShare).pack(side=RIGHT, expand=YES, fill=X)
     rightFrame.pack(side=TOP)
 
-    # Create the area and the scrolldown for resolution
-    frameGeometry = Frame(root)
-    labelGeometry = Label(frameGeometry,width=9,text='Geometry %')
-    textGeometry = Entry(frameGeometry, width=3)
-    textGeometry.insert(0,options['resolution'])
-    frameGeometry.pack(side=TOP, fill=X)
-    labelGeometry.pack(side=LEFT)
-    textGeometry.pack(side=LEFT, expand=NO)
 
     frameButtons = Frame(root)
     frameButtons.pack(side=BOTTOM)
