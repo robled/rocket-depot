@@ -58,7 +58,7 @@ def open_rdoer_site():
     return
 
 def run_rdesktop():
-    params = ['rdesktop']
+    params = ['rdesktop', '-k', 'en-us', '-a', '16']
 
     if textHost.get() == '':
         popup_alert('No Host', 'No Host or IP Address Given')
