@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python
 
 # Originally written by Cory Wright
 # http://projects.standblue.net/software/#rdesktop-open
