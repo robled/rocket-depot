@@ -93,7 +93,6 @@ def print_options():
     print 'host => ' + textHost.get()
     print 'user => ' + textUsername.get()
     print 'resolution => ' + textGeometry.get()
-    print 'pass => ' + textPassword.get()
     print 'fullscreen => ' + str(varFs.get())
     print 'grabkeyboard => ' + str(varGrabKeyboard.get())
     print 'homeshare => ' + str(varHomeShare.get())
