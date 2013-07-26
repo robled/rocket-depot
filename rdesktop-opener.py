@@ -71,7 +71,7 @@ def run_rdesktop():
     client = varProgram.get()
     if client == 'rdesktop':
         params = ['rdesktop', '-k', 'en-us', '-a', '16']
-    if client == 'xfreerdp':
+    else:
         params = ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard']
 
     if textHost.get() == '':
@@ -81,40 +81,40 @@ def run_rdesktop():
         if client == 'rdesktop':
             params.append('-u')
             params.append('%s' % string.strip(textUsername.get()))
-        if client == 'xfreerdp':
+        else:
             params.append('/u:' + '%s' % string.strip(textUsername.get()))
     if textPassword.get() != '':
         if client == 'rdesktop':
             params.append('-p')
             params.append('%s' % string.strip(textPassword.get()))
-        if client == 'xfreerdp':
+        else:
             params.append('/p:' + '%s' % string.strip(textPassword.get()))
     if textGeometry.get() != '':
         if client == 'rdesktop':
             params.append('-g')
             params.append('%s' % string.strip(textGeometry.get()))
-        if client == 'xfreerdp':
+        else:
             params.append('/size:' + '%s' % string.strip(textGeometry.get()))
     if varFs.get() == 1:
         if client == 'rdesktop':
             params.append('-f')
-        if client == 'xfreerdp':
+        else:
             params.append('/f')
     if varGrabKeyboard.get() == 0:
         if client == 'rdesktop':
             params.append('-K')
-        if client == 'xfreerdp':
+        else:
             params.append('-grab-keyboard')
     if varHomeShare.get() == 1:
         if client == 'rdesktop':
             params.append('-r')
             params.append('disk:home=' + os.environ['HOME'])
-        if client == 'xfreerdp':
+        else:
             params.append('+home-drive')
     if textHost.get() != '':
         if client == 'rdesktop':
             params.append('%s' % string.strip(textHost.get()))
-        if client == 'xfreerdp':
+        else:
             params.append('/v:' + '%s' % string.strip(textHost.get()))
 
     os.spawnvp(os.P_NOWAIT, params[0], params)
@@ -128,10 +128,10 @@ def print_options():
     print 'host => ' + textHost.get()
     print 'user => ' + textUsername.get()
     print 'resolution => ' + textGeometry.get()
+    print 'program => ' + str(varProgram.get())
     print 'fullscreen => ' + str(varFs.get())
     print 'grabkeyboard => ' + str(varGrabKeyboard.get())
     print 'homeshare => ' + str(varHomeShare.get())
-    print 'program => ' + str(varProgram.get())
 
 try:
     conf = open(configfile, 'r')
