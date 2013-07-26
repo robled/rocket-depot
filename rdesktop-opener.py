@@ -18,9 +18,10 @@ options = { 'host'          : 'host.example.com',
             'pass'          : '',
             'fullscreen'    : 0,
             'grabkeyboard'  : 0,
-            'homeshare'     : 0 }
+            'homeshare'     : 0,
+            'program'       : 'rdesktop' }
 
-optlist = ('host', 'user', 'resolution', 'fullscreen', 'grabkeyboard', 'homeshare')
+optlist = ('host', 'user', 'resolution', 'program', 'fullscreen', 'grabkeyboard', 'homeshare',)
 
 configfile = '%s/.rdesktop-opener' % os.environ['HOME']
 
@@ -32,10 +33,10 @@ def popup_alert(title, textmsg):
 
 def save_conf():
     # host, user name, resolution, fullscreen (0,1), grab keyboard (0,1),
-    # homeshare (0,1)
+    # homeshare (0,1), program (rdesktop,xfreerdp)
     conf = open(configfile, 'w')
     geometry = string.strip(textGeometry.get())
-    ofline = '%s,%s,%s,' % (textHost.get(), textUsername.get(), geometry)
+    ofline = '%s,%s,%s,%s,' % (textHost.get(), textUsername.get(), geometry, varProgram.get())
     ofline = ofline + '%s,%s,%s\n' % (
         varFs.get(), varGrabKeyboard.get(), varHomeShare.get())
     conf.write(ofline)
@@ -58,29 +59,54 @@ def open_rdoer_site():
     return
 
 def run_rdesktop():
-    params = ['rdesktop', '-k', 'en-us', '-a', '16']
+    client = varProgram.get()
+    if client == 'rdesktop':
+        params = ['rdesktop', '-k', 'en-us', '-a', '16']
+    if client == 'xfreerdp':
+        params = ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard']
 
     if textHost.get() == '':
         popup_alert('No Host', 'No Host or IP Address Given')
         return
     if textUsername.get() != '':
-        params.append('-u')
-        params.append('%s' % string.strip(textUsername.get()))
+        if client == 'rdesktop':
+            params.append('-u')
+            params.append('%s' % string.strip(textUsername.get()))
+        if client == 'xfreerdp':
+            params.append('/u:' + '%s' % string.strip(textUsername.get()))
     if textPassword.get() != '':
-        params.append('-p')
-        params.append('%s' % string.strip(textPassword.get()))
+        if client == 'rdesktop':
+            params.append('-p')
+            params.append('%s' % string.strip(textPassword.get()))
+        if client == 'xfreerdp':
+            params.append('/p:' + '%s' % string.strip(textPassword.get()))
     if textGeometry.get() != '':
-        params.append('-g')
-        params.append('%s' % string.strip(textGeometry.get()))
+        if client == 'rdesktop':
+            params.append('-g')
+            params.append('%s' % string.strip(textGeometry.get()))
+        if client == 'xfreerdp':
+            params.append('/size:' + '%s' % string.strip(textGeometry.get()))
     if varFs.get() == 1:
-        params.append('-f')
+        if client == 'rdesktop':
+            params.append('-f')
+        if client == 'xfreerdp':
+            params.append('/f')
     if varGrabKeyboard.get() == 0:
-        params.append('-K')
+        if client == 'rdesktop':
+            params.append('-K')
+        if client == 'xfreerdp':
+            params.append('-grab-keyboard')
     if varHomeShare.get() == 1:
-        params.append('-r')
-        params.append('disk:home=' + os.environ['HOME'])
+        if client == 'rdesktop':
+            params.append('-r')
+            params.append('disk:home=' + os.environ['HOME'])
+        if client == 'xfreerdp':
+            params.append('+home-drive')
     if textHost.get() != '':
-        params.append('%s' % string.strip(textHost.get()))
+        if client == 'rdesktop':
+            params.append('%s' % string.strip(textHost.get()))
+        if client == 'xfreerdp':
+            params.append('/v:' + '%s' % string.strip(textHost.get()))
 
     os.spawnvp(os.P_NOWAIT, params[0], params)
     return
@@ -96,18 +122,20 @@ def print_options():
     print 'fullscreen => ' + str(varFs.get())
     print 'grabkeyboard => ' + str(varGrabKeyboard.get())
     print 'homeshare => ' + str(varHomeShare.get())
+    print 'program => ' + str(varProgram.get())
 
 try:
     conf = open(configfile, 'r')
 except IOError:
-    popup_alert('''No ~/.rdesktop-open found',
-                   No ~/.rdesktop-open file was found.\nChoose 'Save' from
-                   the 'File' menu to create one''')
+    popup_alert(
+        'No ~/.rdesktop-opener found',
+    '''No ~/.rdesktop-opener file was found.\n
+    Choose 'Save' from the 'File' menu to create one.''')
 else:
     if conf:
         readconf = string.strip(conf.readline())
         # host, user name, resolution, fullscreen (0,1), grab keyboard (0,1),
-        # homeshare (0,1)
+        # homeshare (0,1), program (rdesktop,xfreerdp)
         optindex = 0
         for opt in string.split(readconf, ','):
             options[optlist[optindex]] = opt
@@ -186,6 +214,18 @@ if __name__ == '__main__':
     labelGeometry.pack(side=LEFT)
     textGeometry.pack(side=LEFT, expand=NO)
 
+    # Create the area for the program
+    frameProgram = Frame(root)
+    labelProgram = Label(frameProgram, width=9, text='Program')
+    frameProgram.pack(side=TOP, fill=X)
+    labelProgram.pack(side=LEFT)
+    programList=['rdesktop','xfreerdp']
+    varProgram = StringVar(root)
+    varProgram.set(options['program'])
+    programMenu=OptionMenu(frameProgram, varProgram, *programList)
+    programMenu.pack(side=LEFT)
+    programMenu.config(width=8)
+
     # Create the area for the full screen
     rightFrame = Frame(root)
     varFs = IntVar()
@@ -205,6 +245,7 @@ if __name__ == '__main__':
         variable=varHomeShare).pack(side=RIGHT, expand=YES, fill=X)
     rightFrame.pack(side=TOP)
 
+    # Create the area for the connect/quit buttons
     frameButtons = Frame(root)
     frameButtons.pack(side=BOTTOM)
     Button(
