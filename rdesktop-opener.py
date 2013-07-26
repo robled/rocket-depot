@@ -12,17 +12,24 @@ if os.environ.has_key('USER'):
 else:
     user = 'username'
 
-options = { 'host'          : 'host.example.com',
-            'user'          : 'user',
-            'resolution'    : '1024x768',
-            'program'       : 'rdesktop',
-            'pass'          : '',
-            'fullscreen'    : 0,
-            'grabkeyboard'  : 0,
-            'homeshare'     : 0,
-             }
+options = {'host'          : 'host.example.com',
+           'user'          : 'user',
+           'resolution'    : '1024x768',
+           'program'       : 'rdesktop',
+           'pass'          : '',
+           'fullscreen'    : 0,
+           'grabkeyboard'  : 0,
+           'homeshare'     : 0,
+            }
 
-optlist = ('host', 'user', 'resolution', 'program', 'fullscreen', 'grabkeyboard', 'homeshare',)
+optlist = ('host',
+           'user',
+           'resolution',
+           'program',
+           'fullscreen',
+           'grabkeyboard',
+           'homeshare'
+           )
 
 configfile = '%s/.rdesktop-opener' % os.environ['HOME']
 
@@ -33,11 +40,12 @@ def popup_alert(title, textmsg):
     alert.mainloop()
 
 def save_conf():
-    # host, user name, resolution, fullscreen (0,1), grab keyboard (0,1),
-    # homeshare (0,1), program (rdesktop,xfreerdp)
+    # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
+    # (0,1), grab keyboard (0,1), homeshare (0,1)
     conf = open(configfile, 'w')
     geometry = string.strip(textGeometry.get())
-    ofline = '%s,%s,%s,%s,' % (textHost.get(), textUsername.get(), geometry, varProgram.get())
+    ofline = '%s,%s,%s,%s,' % (textHost.get(), textUsername.get(), geometry,
+                               varProgram.get())
     ofline = ofline + '%s,%s,%s\n' % (
         varFs.get(), varGrabKeyboard.get(), varHomeShare.get())
     conf.write(ofline)
@@ -135,8 +143,8 @@ except IOError:
 else:
     if conf:
         readconf = string.strip(conf.readline())
-        # host, user name, resolution, fullscreen (0,1), grab keyboard (0,1),
-        # homeshare (0,1), program (rdesktop,xfreerdp)
+        # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
+        # (0,1), grab keyboard (0,1), homeshare (0,1)
         optindex = 0
         for opt in string.split(readconf, ','):
             options[optlist[optindex]] = opt
@@ -155,7 +163,8 @@ if __name__ == '__main__':
     menuFileDropdown = Menu(menuFileButton, relief=RIDGE)
     menuFileDropdown.add_command(
         label='Save Current Configuration', underline=0, command=save_conf)
-    menuFileDropdown.add_command(label='Exit', underline=0, command=root.destroy)
+    menuFileDropdown.add_command(label='Exit', underline=0,
+                                 command=root.destroy)
     menuFileButton.config(menu=menuFileDropdown)
 
     menuOptsButton = Menubutton(menuFrameTop, text='Options', underline=0)
