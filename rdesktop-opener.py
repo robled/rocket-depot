@@ -15,11 +15,12 @@ else:
 options = { 'host'          : 'host.example.com',
             'user'          : 'user',
             'resolution'    : '1024x768',
+            'program'       : 'rdesktop',
             'pass'          : '',
             'fullscreen'    : 0,
             'grabkeyboard'  : 0,
             'homeshare'     : 0,
-            'program'       : 'rdesktop' }
+             }
 
 optlist = ('host', 'user', 'resolution', 'program', 'fullscreen', 'grabkeyboard', 'homeshare',)
 
