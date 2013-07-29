@@ -155,36 +155,29 @@ if __name__ == '__main__':
     root = Tk(className='rdesktop-opener')
     root.title('rdesktop-opener')
 
-    menuFrameTop = Frame(root, relief=RIDGE,bd=2)
+    menuFrameTop = Frame(root, relief=RIDGE, bd=2)
     menuFrameTop.pack(side=TOP, fill=X)
 
-    menuFileButton = Menubutton(menuFrameTop, text='File', underline=0)
-    menuFileButton.pack(side=LEFT)
-    menuFileDropdown = Menu(menuFileButton, relief=RIDGE)
-    menuFileDropdown.add_command(
-        label='Save Current Configuration', underline=0, command=save_conf)
-    menuFileDropdown.add_command(label='Exit', underline=0,
-                                 command=root.destroy)
-    menuFileButton.config(menu=menuFileDropdown)
+    # Standard application menu
+    def fmenubutton(label, packside, actionlabel, action):
+        menubutton = Menubutton(menuFrameTop, text=label, underline=0)
+        menubutton.pack(side=packside)
+        menuFileDropdown = Menu(menubutton, relief=RIDGE)
+        menubutton.config(menu=menuFileDropdown)
+        index = 0
+        for x in actionlabel:
+            menuFileDropdown.add_command(label=actionlabel[index], underline=0,
+                                         command=action[index])
+            index = index + 1
 
-    menuOptsButton = Menubutton(menuFrameTop, text='Options', underline=0)
-    menuOptsButton.pack(side=LEFT)
-    menuOptsDropdown = Menu(menuOptsButton, relief=RIDGE)
-    menuOptsDropdown.add_command(
-        label='Print Debugging Info To Console', underline=0,
-        command=print_options)
-    menuOptsButton.config(menu=menuOptsDropdown)
-
-    menuHelpButton = Menubutton(menuFrameTop, text='Help', underline=0)
-    menuHelpButton.pack(side=RIGHT)
-    menuHelpDropdown = Menu(menuHelpButton, relief=RIDGE)
-    menuHelpDropdown.add_command(
-        label='RDesktop Homepage', underline=0, command=open_rdesktop_site)
-    menuHelpDropdown.add_command(
-        label='rdesktop-open Homepage', underline=9, command=open_rdo_site)
-    menuHelpDropdown.add_command(
-        label='rdesktop-opener GitHub',underline=9, command=open_rdoer_site)
-    menuHelpButton.config(menu=menuHelpDropdown)
+    # Our application menu options
+    fmenubutton('File', LEFT, ['Save Current Configuration', 'Exit'],
+                [save_conf, root.destroy])
+    fmenubutton('Options', LEFT, ['Print Debugging Info To Console'],
+                [print_options])
+    fmenubutton('Help', RIGHT, ['RDesktop Homepage', 'rdesktop-open Homepage',
+                'rdesktop-opener GitHub'], [open_rdesktop_site, open_rdo_site,
+                open_rdoer_site])
 
     # Create the area for hosts
     frameHost = Frame(root)
