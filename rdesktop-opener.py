@@ -168,7 +168,7 @@ if __name__ == '__main__':
         for x in actionlabel:
             menuFileDropdown.add_command(label=actionlabel[index], underline=0,
                                          command=action[index])
-            index = index + 1
+            index += 1
 
     # Our application menu options
     fmenubutton('File', LEFT, ['Save Current Configuration', 'Exit'],
@@ -229,24 +229,23 @@ if __name__ == '__main__':
     programMenu.pack(side=LEFT)
     programMenu.config(width=8)
 
-    # Create the area for the full screen
+    # Create the area for the checkboxes
     rightFrame = Frame(root)
+
+    # Generic checkboxes
+    def checkbox(checkvar, option, label, pack):
+        checkvar.set(options[option])
+        Checkbutton(
+            rightFrame, text=label,
+            variable=checkvar).pack(side=pack, expand=YES, fill=X)
+        rightFrame.pack(side=TOP)
+
     varFs = IntVar()
-    varFs.set(options['fullscreen'])
-    Checkbutton(
-        rightFrame, text='Fullscreen', variable=varFs).pack(side=RIGHT,
-        expand=YES, fill=X)
     varGrabKeyboard = IntVar()
-    varGrabKeyboard.set(options['grabkeyboard'])
-    Checkbutton(
-        rightFrame, text='Grab keyboard',
-        variable=varGrabKeyboard).pack(side=RIGHT, expand=YES, fill=X)
     varHomeShare = IntVar()
-    varHomeShare.set(options['homeshare'])
-    Checkbutton(
-        rightFrame, text='Share Home Dir',
-        variable=varHomeShare).pack(side=RIGHT, expand=YES, fill=X)
-    rightFrame.pack(side=TOP)
+    checkbox(varHomeShare, 'homeshare', 'Share Home Dir', LEFT)
+    checkbox(varGrabKeyboard, 'grabkeyboard', 'Grab Keyboard', LEFT)
+    checkbox(varFs, 'fullscreen', 'Fullscreen', RIGHT)
 
     # Create the area for the connect/quit buttons
     frameButtons = Frame(root)
