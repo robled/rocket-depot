@@ -77,19 +77,19 @@ def run_rdesktop():
     if textHost.get() == '':
         popup_alert('No Host', 'No Host or IP Address Given')
         return
-    if textUsername.get() != '':
+    if textUsername.get():
         if client == 'rdesktop':
             params.append('-u')
             params.append('%s' % string.strip(textUsername.get()))
         else:
             params.append('/u:' + '%s' % string.strip(textUsername.get()))
-    if textPassword.get() != '':
+    if textPassword.get():
         if client == 'rdesktop':
             params.append('-p')
             params.append('%s' % string.strip(textPassword.get()))
         else:
             params.append('/p:' + '%s' % string.strip(textPassword.get()))
-    if textGeometry.get() != '':
+    if textGeometry.get():
         if client == 'rdesktop':
             params.append('-g')
             params.append('%s' % string.strip(textGeometry.get()))
@@ -111,7 +111,7 @@ def run_rdesktop():
             params.append('disk:home=' + os.environ['HOME'])
         else:
             params.append('+home-drive')
-    if textHost.get() != '':
+    if textHost.get():
         if client == 'rdesktop':
             params.append('%s' % string.strip(textHost.get()))
         else:
@@ -121,9 +121,6 @@ def run_rdesktop():
     return
 
 def print_options():
-    print '-- default options --'
-    for i in options.keys():
-        print i, ' => ', options[i]
     print '-- currently selected options --'
     print 'host => ' + textHost.get()
     print 'user => ' + textUsername.get()
