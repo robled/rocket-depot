@@ -14,12 +14,12 @@ else:
 
 options = {'host'          : 'host.example.com',
            'user'          : 'user',
+           'pass'          : '',
            'resolution'    : '1024x768',
            'program'       : 'rdesktop',
-           'pass'          : '',
-           'fullscreen'    : 0,
-           'grabkeyboard'  : 0,
            'homeshare'     : 0,
+           'grabkeyboard'  : 0,
+           'fullscreen'    : 0,
             }
 
 optlist = ('host',
@@ -68,54 +68,51 @@ def open_rdoer_site():
     return
 
 def run_rdesktop():
+    client_opts = {
+        'rdesktop': {
+            'stdopts': ['rdesktop', '-k', 'en-us', '-a', '16'],
+            'host': '',
+            'user': '-u',
+            'pass': '-p',
+            'resolution': '-g',
+            'homeshare': '-rdisk:home=' + os.environ['HOME'],
+            'grabkeyboard': '-K',
+            'fullscreen': '-f'
+        },
+        'xfreerdp': {
+            'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
+            'host': '/v:',
+            'user': '/u:',
+            'pass': '/p:',
+            'resolution': '/size:',
+            'homeshare': '+home-drive',
+            'grabkeyboard': '-grab-keyboard',
+            'fullscreen': '/f'
+        }
+    }
+
     client = varProgram.get()
-    if client == 'rdesktop':
-        params = ['rdesktop', '-k', 'en-us', '-a', '16']
-    else:
-        params = ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard']
+    params = []
+    for x in client_opts[client]['stdopts']:
+        params.append(x)
 
     if textHost.get() == '':
         popup_alert('No Host', 'No Host or IP Address Given')
         return
     if textUsername.get():
-        if client == 'rdesktop':
-            params.append('-u')
-            params.append('%s' % string.strip(textUsername.get()))
-        else:
-            params.append('/u:' + '%s' % string.strip(textUsername.get()))
+        params.append(client_opts[client]['user'] + '%s' % string.strip(textUsername.get()))
     if textPassword.get():
-        if client == 'rdesktop':
-            params.append('-p')
-            params.append('%s' % string.strip(textPassword.get()))
-        else:
-            params.append('/p:' + '%s' % string.strip(textPassword.get()))
+        params.append(client_opts[client]['pass'] + '%s' % string.strip(textPassword.get()))
     if textGeometry.get():
-        if client == 'rdesktop':
-            params.append('-g')
-            params.append('%s' % string.strip(textGeometry.get()))
-        else:
-            params.append('/size:' + '%s' % string.strip(textGeometry.get()))
+        params.append(client_opts[client]['resolution'] + '%s' % string.strip(textGeometry.get()))
     if varFs.get() == 1:
-        if client == 'rdesktop':
-            params.append('-f')
-        else:
-            params.append('/f')
+        params.append(client_opts[client]['fullscreen'])
     if varGrabKeyboard.get() == 0:
-        if client == 'rdesktop':
-            params.append('-K')
-        else:
-            params.append('-grab-keyboard')
+        params.append(client_opts[client]['grabkeyboard'])
     if varHomeShare.get() == 1:
-        if client == 'rdesktop':
-            params.append('-r')
-            params.append('disk:home=' + os.environ['HOME'])
-        else:
-            params.append('+home-drive')
+        params.append(client_opts[client]['homeshare'])
     if textHost.get():
-        if client == 'rdesktop':
-            params.append('%s' % string.strip(textHost.get()))
-        else:
-            params.append('/v:' + '%s' % string.strip(textHost.get()))
+        params.append(client_opts[client]['host'] + '%s' % string.strip(textHost.get()))
 
     os.spawnvp(os.P_NOWAIT, params[0], params)
     return
