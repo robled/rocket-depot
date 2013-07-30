@@ -101,7 +101,8 @@ def run_rdesktop():
         return
     if textUsername.get():
         params.append(client_opts[client]['user'] + '%s' % string.strip(textUsername.get()))
-    if textPassword.get():
+    # xfreerdp doesn't mask the password in ps
+    if textPassword.get() and client == 'rdesktop':
         params.append(client_opts[client]['pass'] + '%s' % string.strip(textPassword.get()))
     if textGeometry.get():
         params.append(client_opts[client]['resolution'] + '%s' % string.strip(textGeometry.get()))
