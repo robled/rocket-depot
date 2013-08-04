@@ -8,10 +8,6 @@ import string
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
 
-if os.environ.has_key('USER'):
-    user = os.environ['USER']
-else:
-    user = 'username'
 
 configfile = '%s/.rdesktop-opener' % os.environ['HOME']
 
@@ -32,6 +28,9 @@ optlist = ('host',
            'grabkeyboard',
            'fullscreen'
            )
+
+if os.environ.has_key('USER'):
+    options['user'] = os.environ['USER']
 
 def save_conf():
     # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
