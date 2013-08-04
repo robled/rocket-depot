@@ -8,7 +8,6 @@ import string
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
 
-
 configfile = '%s/.rdesktop-opener' % os.environ['HOME']
 
 options = {'host'          : 'host.example.com',
@@ -51,8 +50,6 @@ def save_conf():
             program = selprogram
     except:
         pass
-    #ofline = '%s,%s,%s,%s,' % (window.hostentry.get_text(), window.userentry.get_text(), geometry,
-    #                           selprogram)
     ofline = '%s,%s,%s,%s,' % (host, user, geometry, program)
     ofline = ofline + '%s,%s,%s\n' % (
         options['homeshare'], options['grabkeyboard'], options['fullscreen'])
@@ -98,6 +95,7 @@ class MainWindow(Gtk.Window):
         self.set_border_width(8)
         progicon = Gtk.IconTheme.get_default().load_icon('gnome-network-properties', 64, 0)
         self.set_icon(progicon)
+        self.set_wmclass('rdesktop-opener', 'rdesktop-opener')
 
         program_store = Gtk.ListStore(str)
         programs = {'rdesktop':1, 'xfreerdp':0}
@@ -284,7 +282,6 @@ class MainWindow(Gtk.Window):
 
 window = MainWindow()
 
-
 def run_rdesktop():
     client_opts = {
         'rdesktop': {
@@ -307,7 +304,7 @@ def run_rdesktop():
         }
     }
 
-    client = selprogram 
+    client = selprogram
     params = []
     for x in client_opts[client]['stdopts']:
         params.append(x)
