@@ -8,6 +8,13 @@ import string
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
 
+if os.environ.has_key('USER'):
+    user = os.environ['USER']
+else:
+    user = 'username'
+
+configfile = '%s/.rdesktop-opener' % os.environ['HOME']
+
 options = {'host'          : 'host.example.com',
            'user'          : 'user',
            'resolution'    : '1024x768',
@@ -26,13 +33,37 @@ optlist = ('host',
            'fullscreen'
            )
 
-configfile = '%s/.rdesktop-opener' % os.environ['HOME']
+def save_conf():
+    # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
+    # (0,1), grab keyboard (0,1), homeshare (0,1)
+    conf = open(configfile, 'w')
+    host = options['host']
+    user = options['user']
+    geometry = options['resolution']
+    program = options['program']
+    try:
+        if options['host'] != string.strip(window.hostentry.get_text()):
+            host = string.strip(window.hostentry.get_text())
+        if options['user'] != string.strip(window.userentry.get_text()):
+            user = string.strip(window.userentry.get_text())
+        if options['resolution'] != string.strip(window.geometryentry.get_text()):
+            geometry = string.strip(window.geometryentry.get_text())
+        if options['program'] != selprogram:
+            program = selprogram
+    except:
+        pass
+    #ofline = '%s,%s,%s,%s,' % (window.hostentry.get_text(), window.userentry.get_text(), geometry,
+    #                           selprogram)
+    ofline = '%s,%s,%s,%s,' % (host, user, geometry, program)
+    ofline = ofline + '%s,%s,%s\n' % (
+        options['homeshare'], options['grabkeyboard'], options['fullscreen'])
+    conf.write(ofline)
+    conf.close()
 
 try:
     conf = open(configfile, 'r')
 except IOError:
-    window.on_warn('null', 'No ~/.rdesktop-opener file found',
-    '''Choose 'Save Current Configuration' from the 'File' menu to create one.''')
+    save_conf()
 else:
     if conf:
         readconf = string.strip(conf.readline())
@@ -66,7 +97,7 @@ class MainWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="rdesktop-opener", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(8)
-        progicon = Gtk.IconTheme.get_default().load_icon('gnome-network-properties', 64, 0) 
+        progicon = Gtk.IconTheme.get_default().load_icon('gnome-network-properties', 64, 0)
         self.set_icon(progicon)
 
         program_store = Gtk.ListStore(str)
@@ -252,25 +283,8 @@ class MainWindow(Gtk.Window):
         about.run()
         about.destroy()
 
-
 window = MainWindow()
 
-if os.environ.has_key('USER'):
-    user = os.environ['USER']
-else:
-    user = 'username'
-
-def save_conf():
-    # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
-    # (0,1), grab keyboard (0,1), homeshare (0,1)
-    conf = open(configfile, 'w')
-    geometry = string.strip(window.geometryentry.get_text())
-    ofline = '%s,%s,%s,%s,' % (window.hostentry.get_text(), window.userentry.get_text(), geometry,
-                               selprogram)
-    ofline = ofline + '%s,%s,%s\n' % (
-        options['homeshare'], options['grabkeyboard'], options['fullscreen'])
-    conf.write(ofline)
-    conf.close()
 
 def run_rdesktop():
     client_opts = {
