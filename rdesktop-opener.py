@@ -1,16 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 # Originally written by Cory Wright
 # http://projects.standblue.net/software/#rdesktop-open
 
 import os
 import string
-from Tkinter import *
-
-if os.environ.has_key('USER'):
-    user = os.environ['USER']
-else:
-    user = 'username'
+from gi.repository import Gtk, Gdk, GObject
+from gi.repository.GdkPixbuf import Pixbuf
 
 options = {'host'          : 'host.example.com',
            'user'          : 'user',
@@ -19,53 +15,270 @@ options = {'host'          : 'host.example.com',
            'program'       : 'rdesktop',
            'homeshare'     : 0,
            'grabkeyboard'  : 0,
-           'fullscreen'    : 0,
+           'fullscreen'    : 0
             }
 
 optlist = ('host',
            'user',
            'resolution',
            'program',
-           'fullscreen',
+           'homeshare',
            'grabkeyboard',
-           'homeshare'
+           'fullscreen'
            )
 
 configfile = '%s/.rdesktop-opener' % os.environ['HOME']
 
-def popup_alert(title, textmsg):
-    alert = Tk(className='rdesktop-opener')
-    alert.title('Notice: '+title)
-    Label(alert, text='Notice: '+textmsg).pack()
-    alert.mainloop()
+try:
+    conf = open(configfile, 'r')
+except IOError:
+    window.on_warn('null', 'No ~/.rdesktop-opener file found',
+    '''Choose 'Save Current Configuration' from the 'File' menu to create one.''')
+else:
+    if conf:
+        readconf = string.strip(conf.readline())
+        # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
+        # (0,1), grab keyboard (0,1), homeshare (0,1)
+        optindex = 0
+        for opt in string.split(readconf, ','):
+            options[optlist[optindex]] = opt
+            optindex = optindex + 1
+
+UI_INFO = """
+<ui>
+  <menubar name='MenuBar'>
+    <menu action='FileMenu'>
+      <menuitem action='SaveCurrentConfig' />
+      <menuitem action='FileQuit' />
+    </menu>
+    <menu action='OptionMenu'>
+      <menuitem action='PrintDebug' />
+    </menu>
+    <menu action='Help'>
+      <menuitem action='About'/>
+    </menu>
+  </menubar>
+</ui>
+"""
+
+class MainWindow(Gtk.Window):
+
+    def __init__(self):
+        Gtk.Window.__init__(self, title="rdesktop-opener", resizable=0)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_border_width(8)
+        progicon = Gtk.IconTheme.get_default().load_icon('gnome-network-properties', 64, 0) 
+        self.set_icon(progicon)
+
+        program_store = Gtk.ListStore(str)
+        programs = {'rdesktop':1, 'xfreerdp':0}
+        for key in programs:
+            program_store.append([key])
+
+        program_combo = Gtk.ComboBox.new_with_model(program_store)
+        program_combo.connect("changed", self.on_program_combo_changed)
+        renderer_text = Gtk.CellRendererText()
+        program_combo.pack_start(renderer_text, True)
+        program_combo.add_attribute(renderer_text, "text", 0)
+        program_combo.set_active(programs[options['program']])
+
+        action_group = Gtk.ActionGroup("Menu")
+
+        self.add_file_menu_actions(action_group)
+        self.add_options_menu_actions(action_group)
+        self.add_help_menu_actions(action_group)
+
+        uimanager = self.create_ui_manager()
+        uimanager.insert_action_group(action_group)
+
+        menubar = uimanager.get_widget("/MenuBar")
+
+        quitbutton = Gtk.Button(label="Quit")
+        quitbutton.connect("clicked", self.on_menu_file_quit)
+
+        connectbutton = Gtk.Button(label="Connect")
+        connectbutton.connect("clicked", self.on_connectbutton_clicked)
+
+        homedirbutton = Gtk.CheckButton("Share Home Dir")
+        homedirbutton.connect("toggled", self.on_button_toggled, "homeshare")
+        if options['homeshare'] == '1':
+            homedirbutton.set_active(True)
+
+        grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
+        grabkeyboardbutton.connect("toggled", self.on_button_toggled, "grabkeyboard")
+        if options['grabkeyboard'] == '1':
+            grabkeyboardbutton.set_active(True)
+
+        fullscreenbutton = Gtk.CheckButton("Fullscreen")
+        fullscreenbutton.connect("toggled", self.on_button_toggled, "fullscreen")
+        if options['fullscreen'] == '1':
+            fullscreenbutton.set_active(True)
+
+        grid = Gtk.Grid()
+        grid.set_row_spacing(4)
+        self.add(grid)
+
+        hostlabel = Gtk.Label("Host")
+        userlabel = Gtk.Label("Username")
+        passwordlabel = Gtk.Label("Password")
+        geometrylabel = Gtk.Label("Geometry")
+        programlabel = Gtk.Label("Program")
+
+        self.hostentry = Gtk.Entry()
+        self.hostentry.set_text(options['host'])
+        self.hostentry.connect("activate", self.enter_callback, self.hostentry)
+        self.userentry = Gtk.Entry()
+        self.userentry.set_text(options['user'])
+        self.userentry.connect("activate", self.enter_callback, self.userentry)
+        self.passwordentry = Gtk.Entry()
+        self.passwordentry.set_visibility(False)
+        self.passwordentry.connect("activate", self.enter_callback, self.passwordentry)
+        self.geometryentry = Gtk.Entry()
+        self.geometryentry.set_text(options['resolution'])
+        self.geometryentry.connect("activate", self.enter_callback, self.geometryentry)
+
+        grid.attach(menubar, 0, 0, 12, 4)
+        grid.attach(hostlabel, 0, 4, 4, 4)
+        grid.attach(userlabel, 0, 8, 4, 4)
+        grid.attach(passwordlabel, 0, 12, 4, 4)
+        grid.attach(geometrylabel, 0, 16, 4, 4)
+        grid.attach(programlabel, 0, 20, 4, 4)
+        grid.attach_next_to(self.hostentry, hostlabel, Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.userentry, userlabel, Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.passwordentry, passwordlabel, Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.geometryentry, geometrylabel, Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(program_combo, programlabel, Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach(homedirbutton, 0, 24, 4, 4)
+        grid.attach_next_to(grabkeyboardbutton, homedirbutton, Gtk.PositionType.RIGHT, 4, 4)
+        grid.attach_next_to(fullscreenbutton, grabkeyboardbutton, Gtk.PositionType.RIGHT, 4, 4)
+        grid.attach(quitbutton, 0, 28, 4, 4)
+        grid.attach_next_to(connectbutton, quitbutton, Gtk.PositionType.RIGHT, 8, 4)
+
+    def enter_callback(self, widget, entry):
+        options['host'] = self.hostentry.get_text()
+        options['user'] = self.userentry.get_text()
+        options['pass'] = self.passwordentry.get_text()
+        options['resolution'] = self.geometryentry.get_text()
+        run_rdesktop()
+
+    def on_program_combo_changed(self, combo):
+        tree_iter = combo.get_active_iter()
+        if tree_iter != None:
+            model = combo.get_model()
+            program = model[tree_iter][0]
+        global selprogram
+        selprogram = program
+
+    def on_button_toggled(self, button, name):
+        if button.get_active():
+            state = 1
+            options[name] = state
+        else:
+            state = 0
+            options[name] = state
+
+    def on_connectbutton_clicked(self, widget):
+        run_rdesktop()
+
+    def add_file_menu_actions(self, action_group):
+        action_filemenu = Gtk.Action("FileMenu", "File", None, None)
+        action_group.add_action(action_filemenu)
+
+        action_group.add_actions([
+            ("SaveCurrentConfig", None, "Save Current Configuration", None, None,
+             self.on_menu_file_save_config),
+        ])
+
+        action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
+        action_filequit.connect("activate", self.on_menu_file_quit)
+        action_group.add_action(action_filequit)
+
+    def add_options_menu_actions(self, action_group):
+        action_group.add_actions([
+            ("OptionMenu", None, "Options"),
+            ("PrintDebug", None, "Print Debugging to Terminal", None, None,
+             self.on_menu_debug),
+        ])
+
+    def add_help_menu_actions(self, action_group):
+        action_group.add_actions([
+            ("Help", None, "Help"),
+            ("About", None, "About", None, None,
+             self.on_menu_help),
+        ])
+
+    def create_ui_manager(self):
+        uimanager = Gtk.UIManager()
+
+        # Throws exception if something went wrong
+        uimanager.add_ui_from_string(UI_INFO)
+
+        # Add the accelerator group to the toplevel window
+        accelgroup = uimanager.get_accel_group()
+        self.add_accel_group(accelgroup)
+        return uimanager
+
+    def on_menu_file_save_config(self, widget):
+        save_conf()
+
+    def on_menu_file_quit(self, widget):
+        Gtk.main_quit()
+
+    def on_menu_help(self, widget):
+        self.on_about(widget)
+
+    def on_menu_debug(self, widget):
+        print_options()
+
+    def on_info(self, widget):
+        # TODO: let's try and set the title and icon later
+        #Gtk.Window(title="MessageDialog")
+        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
+            Gtk.ButtonsType.OK, "This is an INFO MessageDialog")
+        dialog.set_title("hi")
+        dialog.format_secondary_text(
+            "And this is the secondary text that explains things.")
+        dialog.run()
+
+        dialog.destroy()
+
+    def on_warn(self, widget, title, message):
+        Gtk.Window(title="what")
+        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
+            Gtk.ButtonsType.OK, title)
+        dialog.format_secondary_text(message)
+        response = dialog.run()
+        dialog.destroy()
+
+    def on_about(self, widget):
+        about = Gtk.AboutDialog()
+        about.set_program_name("rdesktop-opener")
+        about.set_version("0.0")
+        #about.set_copyright("(c) aperson")
+        about.set_comments("rdesktop/xfreerdp Frontend")
+        about.set_website("https://github.com/robled/rdesktop-opener")
+        about.run()
+        about.destroy()
+
+
+window = MainWindow()
+
+if os.environ.has_key('USER'):
+    user = os.environ['USER']
+else:
+    user = 'username'
 
 def save_conf():
     # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
     # (0,1), grab keyboard (0,1), homeshare (0,1)
     conf = open(configfile, 'w')
-    geometry = string.strip(textGeometry.get())
-    ofline = '%s,%s,%s,%s,' % (textHost.get(), textUsername.get(), geometry,
-                               varProgram.get())
+    geometry = string.strip(window.geometryentry.get_text())
+    ofline = '%s,%s,%s,%s,' % (window.hostentry.get_text(), window.userentry.get_text(), geometry,
+                               selprogram)
     ofline = ofline + '%s,%s,%s\n' % (
-        varFs.get(), varGrabKeyboard.get(), varHomeShare.get())
+        options['homeshare'], options['grabkeyboard'], options['fullscreen'])
     conf.write(ofline)
     conf.close()
-
-def open_url(url):
-    os.spawnvp('P_NOWAIT', 'x-www-browser',('x-www-browser' ,url))
-    return
-
-def open_rdesktop_site():
-    open_url('http://www.rdesktop.org/')
-    return
-
-def open_rdo_site():
-    open_url('http://projects.standblue.net/software/')
-    return
-
-def open_rdoer_site():
-    open_url('https://github.com/robled/rdesktop-opener/')
-    return
 
 def run_rdesktop():
     client_opts = {
@@ -91,167 +304,44 @@ def run_rdesktop():
         }
     }
 
-    client = varProgram.get()
+    client = selprogram 
     params = []
     for x in client_opts[client]['stdopts']:
         params.append(x)
 
-    if textHost.get() == '':
-        popup_alert('No Host', 'No Host or IP Address Given')
+    if options['host'] == '':
+        window.on_warn('null', 'No Host', 'No Host or IP Address Given')
         return
-    if textUsername.get():
-        params.append(client_opts[client]['user'] + '%s' % string.strip(textUsername.get()))
+    if options['user'] != '':
+        params.append(client_opts[client]['user'] + '%s' % string.strip(options['user']))
     # xfreerdp doesn't mask the password in ps
-    if textPassword.get() and client == 'rdesktop':
-        params.append(client_opts[client]['pass'] + '%s' % string.strip(textPassword.get()))
-    if textGeometry.get():
-        params.append(client_opts[client]['resolution'] + '%s' % string.strip(textGeometry.get()))
-    if varFs.get() == 1:
+    if options['pass'] != '' and selprogram == 'rdesktop':
+        params.append(client_opts[client]['pass'] + '%s' % string.strip(options['pass']))
+    if options['resolution'] != '':
+        params.append(client_opts[client]['resolution'] + '%s' % string.strip(options['resolution']))
+    if options['fullscreen'] == 1:
         params.append(client_opts[client]['fullscreen'])
-    if varGrabKeyboard.get() == 0:
+    if options['grabkeyboard'] == '0':
         params.append(client_opts[client]['grabkeyboard'])
-    if varHomeShare.get() == 1:
+    if options['homeshare'] == 1:
         params.append(client_opts[client]['homeshare'])
-    if textHost.get():
-        params.append(client_opts[client]['host'] + '%s' % string.strip(textHost.get()))
+    if options['host']:
+        params.append(client_opts[client]['host'] + '%s' % string.strip(options['host']))
 
+    print params
     os.spawnvp(os.P_NOWAIT, params[0], params)
     return
 
 def print_options():
     print '-- currently selected options --'
-    print 'host => ' + textHost.get()
-    print 'user => ' + textUsername.get()
-    print 'resolution => ' + textGeometry.get()
-    print 'program => ' + str(varProgram.get())
-    print 'fullscreen => ' + str(varFs.get())
-    print 'grabkeyboard => ' + str(varGrabKeyboard.get())
-    print 'homeshare => ' + str(varHomeShare.get())
+    print 'host => ' + options['host']
+    print 'user => ' + options['user']
+    print 'resolution => ' + options['resolution']
+    print 'program => ' + selprogram 
+    print 'homeshare => ' + str(options['homeshare']) 
+    print 'grabkeyboard => ' + str(options['grabkeyboard']) 
+    print 'fullscreen => ' + str(options['fullscreen'])
 
-try:
-    conf = open(configfile, 'r')
-except IOError:
-    popup_alert(
-        'No ~/.rdesktop-opener found',
-    '''No ~/.rdesktop-opener file was found.\n
-    Choose 'Save' from the 'File' menu to create one.''')
-else:
-    if conf:
-        readconf = string.strip(conf.readline())
-        # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
-        # (0,1), grab keyboard (0,1), homeshare (0,1)
-        optindex = 0
-        for opt in string.split(readconf, ','):
-            options[optlist[optindex]] = opt
-            optindex = optindex + 1
-
-if __name__ == '__main__':
-
-    root = Tk(className='rdesktop-opener')
-    root.title('rdesktop-opener')
-
-    menuFrameTop = Frame(root, relief=RIDGE, bd=2)
-    menuFrameTop.pack(side=TOP, fill=X)
-
-    # Standard application menu
-    def fmenubutton(label, packside, actionlabel, action):
-        menubutton = Menubutton(menuFrameTop, text=label, underline=0)
-        menubutton.pack(side=packside)
-        menuFileDropdown = Menu(menubutton, relief=RIDGE)
-        menubutton.config(menu=menuFileDropdown)
-        index = 0
-        for x in actionlabel:
-            menuFileDropdown.add_command(label=actionlabel[index], underline=0,
-                                         command=action[index])
-            index += 1
-
-    # Our application menu options
-    fmenubutton('File', LEFT, ['Save Current Configuration', 'Exit'],
-                [save_conf, root.destroy])
-    fmenubutton('Options', LEFT, ['Print Debugging Info To Console'],
-                [print_options])
-    fmenubutton('Help', RIGHT, ['RDesktop Homepage', 'rdesktop-open Homepage',
-                'rdesktop-opener GitHub'], [open_rdesktop_site, open_rdo_site,
-                open_rdoer_site])
-
-    # Create the area for hosts
-    frameHost = Frame(root)
-    labelHost = Label(frameHost, width=9, text='Host')
-    textHost = Entry(frameHost)
-    textHost.insert(0, options['host'])
-    frameHost.pack(side=TOP, fill=X)
-    labelHost.pack(side=LEFT)
-    textHost.pack(side=RIGHT, expand=YES, fill=X)
-    textHost.focus()
-    textHost.bind('<Return>', (lambda event: run_rdesktop()))
-
-    # Create the area for user name
-    frameUsername = Frame(root)
-    labelUsername = Label(frameUsername, width=9, text='Username')
-    textUsername = Entry(frameUsername)
-    textUsername.insert(0, options['user'])
-    frameUsername.pack(side=TOP, fill=X)
-    labelUsername.pack(side=LEFT)
-    textUsername.pack(side=RIGHT, expand=YES, fill=X)
-
-    # Create the area for the password
-    framePassword = Frame(root)
-    labelPassword = Label(framePassword, width=9, text='Password')
-    textPassword = Entry(framePassword, show='**')
-    textPassword.insert(0, options['pass'])
-    framePassword.pack(side=TOP, fill=X)
-    labelPassword.pack(side=LEFT)
-    textPassword.pack(side=RIGHT, expand=YES, fill=X)
-
-    # Create the area for geometry
-    frameGeometry = Frame(root)
-    labelGeometry = Label(frameGeometry, width=9, text='Geometry')
-    textGeometry = Entry(frameGeometry, width=9)
-    textGeometry.insert(0, options['resolution'])
-    frameGeometry.pack(side=TOP, fill=X)
-    labelGeometry.pack(side=LEFT)
-    textGeometry.pack(side=LEFT, expand=NO)
-
-    # Create the area for the program
-    frameProgram = Frame(root)
-    labelProgram = Label(frameProgram, width=9, text='Program')
-    frameProgram.pack(side=TOP, fill=X)
-    labelProgram.pack(side=LEFT)
-    programList=['rdesktop','xfreerdp']
-    varProgram = StringVar(root)
-    varProgram.set(options['program'])
-    programMenu=OptionMenu(frameProgram, varProgram, *programList)
-    programMenu.pack(side=LEFT)
-    programMenu.config(width=8)
-
-    # Create the area for the checkboxes
-    rightFrame = Frame(root)
-
-    # Generic checkboxes
-    def checkbox(checkvar, option, label, pack):
-        checkvar.set(options[option])
-        Checkbutton(
-            rightFrame, text=label,
-            variable=checkvar).pack(side=pack, expand=YES, fill=X)
-        rightFrame.pack(side=TOP)
-
-    varFs = IntVar()
-    varGrabKeyboard = IntVar()
-    varHomeShare = IntVar()
-    checkbox(varHomeShare, 'homeshare', 'Share Home Dir', LEFT)
-    checkbox(varGrabKeyboard, 'grabkeyboard', 'Grab Keyboard', LEFT)
-    checkbox(varFs, 'fullscreen', 'Fullscreen', RIGHT)
-
-    # Create the area for the connect/quit buttons
-    frameButtons = Frame(root)
-    frameButtons.pack(side=BOTTOM)
-    Button(
-        frameButtons, text='Quit', command=root.destroy).pack(side=LEFT,
-        fill=X)
-    Button(
-        frameButtons, text='Connect', command=run_rdesktop).pack(side=RIGHT,
-        fill=X)
-
-    root.mainloop()
-
-print 'rdesktop-opener.py -- https://github.com/robled/rdesktop-opener'
+window.connect("delete-event", Gtk.main_quit)
+window.show_all()
+Gtk.main()
