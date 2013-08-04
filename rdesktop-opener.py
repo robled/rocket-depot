@@ -10,7 +10,6 @@ from gi.repository.GdkPixbuf import Pixbuf
 
 options = {'host'          : 'host.example.com',
            'user'          : 'user',
-           'pass'          : '',
            'resolution'    : '1024x768',
            'program'       : 'rdesktop',
            'homeshare'     : 0,
@@ -120,7 +119,6 @@ class MainWindow(Gtk.Window):
 
         hostlabel = Gtk.Label("Host")
         userlabel = Gtk.Label("Username")
-        passwordlabel = Gtk.Label("Password")
         geometrylabel = Gtk.Label("Geometry")
         programlabel = Gtk.Label("Program")
 
@@ -130,9 +128,6 @@ class MainWindow(Gtk.Window):
         self.userentry = Gtk.Entry()
         self.userentry.set_text(options['user'])
         self.userentry.connect("activate", self.enter_callback, self.userentry)
-        self.passwordentry = Gtk.Entry()
-        self.passwordentry.set_visibility(False)
-        self.passwordentry.connect("activate", self.enter_callback, self.passwordentry)
         self.geometryentry = Gtk.Entry()
         self.geometryentry.set_text(options['resolution'])
         self.geometryentry.connect("activate", self.enter_callback, self.geometryentry)
@@ -140,12 +135,10 @@ class MainWindow(Gtk.Window):
         grid.attach(menubar, 0, 0, 12, 4)
         grid.attach(hostlabel, 0, 4, 4, 4)
         grid.attach(userlabel, 0, 8, 4, 4)
-        grid.attach(passwordlabel, 0, 12, 4, 4)
         grid.attach(geometrylabel, 0, 16, 4, 4)
         grid.attach(programlabel, 0, 20, 4, 4)
         grid.attach_next_to(self.hostentry, hostlabel, Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.userentry, userlabel, Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(self.passwordentry, passwordlabel, Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.geometryentry, geometrylabel, Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(program_combo, programlabel, Gtk.PositionType.RIGHT, 8, 4)
         grid.attach(homedirbutton, 0, 24, 4, 4)
@@ -157,7 +150,6 @@ class MainWindow(Gtk.Window):
     def enter_callback(self, widget, entry):
         options['host'] = self.hostentry.get_text()
         options['user'] = self.userentry.get_text()
-        options['pass'] = self.passwordentry.get_text()
         options['resolution'] = self.geometryentry.get_text()
         run_rdesktop()
 
@@ -286,7 +278,6 @@ def run_rdesktop():
             'stdopts': ['rdesktop', '-k', 'en-us', '-a', '16'],
             'host': '',
             'user': '-u',
-            'pass': '-p',
             'resolution': '-g',
             'homeshare': '-rdisk:home=' + os.environ['HOME'],
             'grabkeyboard': '-K',
@@ -296,7 +287,6 @@ def run_rdesktop():
             'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
             'host': '/v:',
             'user': '/u:',
-            'pass': '/p:',
             'resolution': '/size:',
             'homeshare': '+home-drive',
             'grabkeyboard': '-grab-keyboard',
@@ -314,9 +304,6 @@ def run_rdesktop():
         return
     if options['user'] != '':
         params.append(client_opts[client]['user'] + '%s' % string.strip(options['user']))
-    # xfreerdp doesn't mask the password in ps
-    if options['pass'] != '' and selprogram == 'rdesktop':
-        params.append(client_opts[client]['pass'] + '%s' % string.strip(options['pass']))
     if options['resolution'] != '':
         params.append(client_opts[client]['resolution'] + '%s' % string.strip(options['resolution']))
     if options['fullscreen'] == 1:
