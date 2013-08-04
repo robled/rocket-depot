@@ -12,7 +12,7 @@ configfile = '%s/.rdesktop-opener' % os.environ['HOME']
 
 options = {'host'          : 'host.example.com',
            'user'          : 'user',
-           'resolution'    : '1024x768',
+           'geometry'    : '1024x768',
            'program'       : 'rdesktop',
            'homeshare'     : 0,
            'grabkeyboard'  : 0,
@@ -21,7 +21,7 @@ options = {'host'          : 'host.example.com',
 
 optlist = ('host',
            'user',
-           'resolution',
+           'geometry',
            'program',
            'homeshare',
            'grabkeyboard',
@@ -32,22 +32,20 @@ if os.environ.has_key('USER'):
     options['user'] = os.environ['USER']
 
 def save_conf():
-    # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
+    # host, user name, geometry, program (rdesktop,xfreerdp), fullscreen
     # (0,1), grab keyboard (0,1), homeshare (0,1)
     conf = open(configfile, 'w')
     host = options['host']
     user = options['user']
-    geometry = options['resolution']
+    geometry = options['geometry']
     program = options['program']
     try:
         if options['host'] != string.strip(window.hostentry.get_text()):
             host = string.strip(window.hostentry.get_text())
         if options['user'] != string.strip(window.userentry.get_text()):
             user = string.strip(window.userentry.get_text())
-        if options['resolution'] != string.strip(window.geometryentry.get_text()):
+        if options['geometry'] != string.strip(window.geometryentry.get_text()):
             geometry = string.strip(window.geometryentry.get_text())
-        if options['program'] != selprogram:
-            program = selprogram
     except:
         pass
     ofline = '%s,%s,%s,%s,' % (host, user, geometry, program)
@@ -63,7 +61,7 @@ except IOError:
 else:
     if conf:
         readconf = string.strip(conf.readline())
-        # host, user name, resolution, program (rdesktop,xfreerdp), fullscreen
+        # host, user name, geometry, program (rdesktop,xfreerdp), fullscreen
         # (0,1), grab keyboard (0,1), homeshare (0,1)
         optindex = 0
         for opt in string.split(readconf, ','):
@@ -157,7 +155,7 @@ class MainWindow(Gtk.Window):
         self.userentry.set_text(options['user'])
         self.userentry.connect("activate", self.enter_callback, self.userentry)
         self.geometryentry = Gtk.Entry()
-        self.geometryentry.set_text(options['resolution'])
+        self.geometryentry.set_text(options['geometry'])
         self.geometryentry.connect("activate", self.enter_callback, self.geometryentry)
 
         grid.attach(menubar, 0, 0, 12, 4)
@@ -178,7 +176,7 @@ class MainWindow(Gtk.Window):
     def enter_callback(self, widget, entry):
         options['host'] = self.hostentry.get_text()
         options['user'] = self.userentry.get_text()
-        options['resolution'] = self.geometryentry.get_text()
+        options['geometry'] = self.geometryentry.get_text()
         run_rdesktop()
 
     def on_program_combo_changed(self, combo):
@@ -186,8 +184,7 @@ class MainWindow(Gtk.Window):
         if tree_iter != None:
             model = combo.get_model()
             program = model[tree_iter][0]
-        global selprogram
-        selprogram = program
+        options['program'] = program
 
     def on_button_toggled(self, button, name):
         if button.get_active():
@@ -288,7 +285,7 @@ def run_rdesktop():
             'stdopts': ['rdesktop', '-k', 'en-us', '-a', '16'],
             'host': '',
             'user': '-u',
-            'resolution': '-g',
+            'geometry': '-g',
             'homeshare': '-rdisk:home=' + os.environ['HOME'],
             'grabkeyboard': '-K',
             'fullscreen': '-f'
@@ -297,14 +294,14 @@ def run_rdesktop():
             'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
             'host': '/v:',
             'user': '/u:',
-            'resolution': '/size:',
+            'geometry': '/size:',
             'homeshare': '+home-drive',
             'grabkeyboard': '-grab-keyboard',
             'fullscreen': '/f'
         }
     }
 
-    client = selprogram
+    client = options['program']
     params = []
     for x in client_opts[client]['stdopts']:
         params.append(x)
@@ -314,8 +311,8 @@ def run_rdesktop():
         return
     if options['user'] != '':
         params.append(client_opts[client]['user'] + '%s' % string.strip(options['user']))
-    if options['resolution'] != '':
-        params.append(client_opts[client]['resolution'] + '%s' % string.strip(options['resolution']))
+    if options['geometry'] != '':
+        params.append(client_opts[client]['geometry'] + '%s' % string.strip(options['geometry']))
     if options['fullscreen'] == 1:
         params.append(client_opts[client]['fullscreen'])
     if options['grabkeyboard'] == '0':
@@ -333,10 +330,10 @@ def print_options():
     print '-- currently selected options --'
     print 'host => ' + options['host']
     print 'user => ' + options['user']
-    print 'resolution => ' + options['resolution']
-    print 'program => ' + selprogram 
-    print 'homeshare => ' + str(options['homeshare']) 
-    print 'grabkeyboard => ' + str(options['grabkeyboard']) 
+    print 'geometry => ' + options['geometry']
+    print 'program => ' + options['program']
+    print 'homeshare => ' + str(options['homeshare'])
+    print 'grabkeyboard => ' + str(options['grabkeyboard'])
     print 'fullscreen => ' + str(options['fullscreen'])
 
 window.connect("delete-event", Gtk.main_quit)
