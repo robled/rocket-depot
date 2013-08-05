@@ -76,6 +76,76 @@ else:
             options[optlist[optindex]] = opt
             optindex = optindex + 1
 
+# Run the selected RDP client - currently rdesktop or xfreerdp
+def run_program():
+    client_opts = {
+        'rdesktop': {
+            'stdopts': ['rdesktop', '-k', 'en-us', '-a', '16'],
+            'host': '',
+            'user': '-u',
+            'geometry': '-g',
+            'homeshare': '-rdisk:home=' + os.environ['HOME'],
+            'grabkeyboard': '-K',
+            'fullscreen': '-f'
+        },
+        'xfreerdp': {
+            'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
+            'host': '/v:',
+            'user': '/u:',
+            'geometry': '/size:',
+            'homeshare': '+home-drive',
+            'grabkeyboard': '-grab-keyboard',
+            'fullscreen': '/f'
+        }
+    }
+
+    client = options['program']
+
+    # List of commandline paramenters for our RDP client
+    params = []
+
+    # Add standard options to the parameter list
+    for x in client_opts[client]['stdopts']:
+        params.append(x)
+
+    # Throw an error if the required host field is empty
+    if not options['host']:
+        window.on_warn('null', 'No Host', 'No Host or IP Address Given')
+        return
+
+    # Add specified options to the parameter list
+    if options['user'] != '':
+        params.append(client_opts[client]['user'] + '%s' % string.strip(options['user']))
+    if options['geometry'] != '':
+        params.append(client_opts[client]['geometry'] + '%s' % string.strip(options['geometry']))
+    if options['fullscreen'] == 1:
+        params.append(client_opts[client]['fullscreen'])
+
+    # Why does this need quotes?
+    if options['grabkeyboard'] == '0':
+        params.append(client_opts[client]['grabkeyboard'])
+    if options['homeshare'] == 1:
+        params.append(client_opts[client]['homeshare'])
+    params.append(client_opts[client]['host'] + '%s' % string.strip(options['host']))
+
+    # Print the command line that we constructed to the terminal
+    print 'Command to execute: \n' + ' '.join(str(param) for param in params)
+
+    # Make it go!
+    os.spawnvp(os.P_NOWAIT, params[0], params)
+    return
+
+# Print the list of options current selected for debugging
+def print_options():
+    print '-- currently selected options --'
+    print 'host => ' + options['host']
+    print 'user => ' + options['user']
+    print 'geometry => ' + options['geometry']
+    print 'program => ' + options['program']
+    print 'homeshare => ' + str(options['homeshare'])
+    print 'grabkeyboard => ' + str(options['grabkeyboard'])
+    print 'fullscreen => ' + str(options['fullscreen'])
+
 # Menu bar layout
 UI_INFO = """
 <ui>
@@ -297,6 +367,8 @@ class MainWindow(Gtk.Window):
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
+
+        # TODO: Why can't we set the title?
         Gtk.Window(title="what")
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
             Gtk.ButtonsType.OK, title)
@@ -319,78 +391,6 @@ class MainWindow(Gtk.Window):
 
 # Make the GUI!
 window = MainWindow()
-
-# Run the selected RDP client - currently rdesktop or xfreerdp
-def run_program():
-    client_opts = {
-        'rdesktop': {
-            'stdopts': ['rdesktop', '-k', 'en-us', '-a', '16'],
-            'host': '',
-            'user': '-u',
-            'geometry': '-g',
-            'homeshare': '-rdisk:home=' + os.environ['HOME'],
-            'grabkeyboard': '-K',
-            'fullscreen': '-f'
-        },
-        'xfreerdp': {
-            'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
-            'host': '/v:',
-            'user': '/u:',
-            'geometry': '/size:',
-            'homeshare': '+home-drive',
-            'grabkeyboard': '-grab-keyboard',
-            'fullscreen': '/f'
-        }
-    }
-
-    client = options['program']
-
-    # List of commandline paramenters for our RDP client
-    params = []
-
-    # Add standard options to the parameter list
-    for x in client_opts[client]['stdopts']:
-        params.append(x)
-
-    # Throw an error if the required host field is empty
-    if not options['host']:
-        window.on_warn('null', 'No Host', 'No Host or IP Address Given')
-        return
-
-    # Add specified options to the parameter list
-    if options['user'] != '':
-        params.append(client_opts[client]['user'] + '%s' % string.strip(options['user']))
-    if options['geometry'] != '':
-        params.append(client_opts[client]['geometry'] + '%s' % string.strip(options['geometry']))
-    if options['fullscreen'] == 1:
-        params.append(client_opts[client]['fullscreen'])
-
-    # Why does this need quotes?
-    if options['grabkeyboard'] == '0':
-        params.append(client_opts[client]['grabkeyboard'])
-    if options['homeshare'] == 1:
-        params.append(client_opts[client]['homeshare'])
-    params.append(client_opts[client]['host'] + '%s' % string.strip(options['host']))
-
-    # Print the command line that we constructed to the terminal
-    print 'Command to execute: \n' + ' '.join(str(param) for param in params)
-
-    # Make it go!
-    os.spawnvp(os.P_NOWAIT, params[0], params)
-    return
-
-# Print the list of options current selected for debugging
-def print_options():
-    print '-- currently selected options --'
-    print 'host => ' + options['host']
-    print 'user => ' + options['user']
-    print 'geometry => ' + options['geometry']
-    print 'program => ' + options['program']
-    print 'homeshare => ' + str(options['homeshare'])
-    print 'grabkeyboard => ' + str(options['grabkeyboard'])
-    print 'fullscreen => ' + str(options['fullscreen'])
-
-# GUI boilerplate
 window.connect("delete-event", Gtk.main_quit)
 window.show_all()
 Gtk.main()
