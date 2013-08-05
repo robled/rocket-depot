@@ -12,7 +12,7 @@ configfile = '%s/.rdesktop-opener' % os.environ['HOME']
 
 options = {'host'          : 'host.example.com',
            'user'          : 'user',
-           'geometry'    : '1024x768',
+           'geometry'      : '1024x768',
            'program'       : 'rdesktop',
            'homeshare'     : 0,
            'grabkeyboard'  : 0,
@@ -177,7 +177,7 @@ class MainWindow(Gtk.Window):
         options['host'] = self.hostentry.get_text()
         options['user'] = self.userentry.get_text()
         options['geometry'] = self.geometryentry.get_text()
-        run_rdesktop()
+        run_program()
 
     def on_program_combo_changed(self, combo):
         tree_iter = combo.get_active_iter()
@@ -195,7 +195,7 @@ class MainWindow(Gtk.Window):
             options[name] = state
 
     def on_connectbutton_clicked(self, widget):
-        run_rdesktop()
+        run_program()
 
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
@@ -279,7 +279,7 @@ class MainWindow(Gtk.Window):
 
 window = MainWindow()
 
-def run_rdesktop():
+def run_program():
     client_opts = {
         'rdesktop': {
             'stdopts': ['rdesktop', '-k', 'en-us', '-a', '16'],
@@ -322,7 +322,7 @@ def run_rdesktop():
     if options['host']:
         params.append(client_opts[client]['host'] + '%s' % string.strip(options['host']))
 
-    print params
+    print 'Command to execute: \n' + ' '.join(str(param) for param in params)
     os.spawnvp(os.P_NOWAIT, params[0], params)
     return
 
