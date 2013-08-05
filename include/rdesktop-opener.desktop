@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=rdesktop-opener
-Categories=Network
+Categories=Network;Application;
 Icon=gnome-network-properties
 Exec=/path/to/rdesktop-opener.py
-StartupWMClass=Rdesktop-opener
+StartupWMClass=rdesktop-opener
