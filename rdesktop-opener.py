@@ -46,7 +46,7 @@ def save_conf():
             user = string.strip(window.userentry.get_text())
         if options['geometry'] != string.strip(window.geometryentry.get_text()):
             geometry = string.strip(window.geometryentry.get_text())
-    except:
+    except NameError:
         pass
     ofline = '%s,%s,%s,%s,' % (host, user, geometry, program)
     ofline = ofline + '%s,%s,%s\n' % (
@@ -200,12 +200,10 @@ class MainWindow(Gtk.Window):
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
         action_group.add_action(action_filemenu)
-
         action_group.add_actions([
             ("SaveCurrentConfig", None, "Save Current Configuration", None, None,
              self.on_menu_file_save_config),
         ])
-
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.on_menu_file_quit)
         action_group.add_action(action_filequit)
@@ -256,7 +254,6 @@ class MainWindow(Gtk.Window):
         dialog.format_secondary_text(
             "And this is the secondary text that explains things.")
         dialog.run()
-
         dialog.destroy()
 
     def on_warn(self, widget, title, message):
@@ -306,7 +303,7 @@ def run_program():
     for x in client_opts[client]['stdopts']:
         params.append(x)
 
-    if options['host'] == '':
+    if not options['host']:
         window.on_warn('null', 'No Host', 'No Host or IP Address Given')
         return
     if options['user'] != '':
