@@ -2,6 +2,6 @@
 Type=Application
 Name=rdesktop-opener
 Categories=Network;Application;
-Icon=gnome-network-properties
+Icon=gnome-fs-web
 Exec=/path/to/rdesktop-opener.py
 StartupWMClass=rdesktop-opener
