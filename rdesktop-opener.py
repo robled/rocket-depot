@@ -351,13 +351,9 @@ class MainWindow(Gtk.Window):
 
     # Generic info dialog
     def on_info(self, widget):
-        # TODO: let's try and set the title and icon later
-        #Gtk.Window(title="MessageDialog")
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
-            Gtk.ButtonsType.OK, "This is an INFO MessageDialog")
-
-        # TODO: Why can't we set the title?
-        dialog.set_title("hi")
+            Gtk.ButtonsType.OK, "This is an INFO MessageDialog",
+            title='rdesktop-opener')
         dialog.format_secondary_text(
             "And this is the secondary text that explains things.")
         dialog.run()
@@ -365,11 +361,8 @@ class MainWindow(Gtk.Window):
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
-
-        # TODO: Why can't we set the title?
-        Gtk.Window(title="what")
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
-            Gtk.ButtonsType.OK, title)
+            Gtk.ButtonsType.OK, title, title='rdesktop-opener')
         dialog.format_secondary_text(message)
         response = dialog.run()
         dialog.destroy()
