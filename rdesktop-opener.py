@@ -120,9 +120,7 @@ def run_program():
         params.append(client_opts[client]['geometry'] + '%s' % string.strip(options['geometry']))
     if options['fullscreen'] == 1:
         params.append(client_opts[client]['fullscreen'])
-
-    # Why does this need quotes?
-    if options['grabkeyboard'] == '0':
+    if options['grabkeyboard'] != 1:
         params.append(client_opts[client]['grabkeyboard'])
     if options['homeshare'] == 1:
         params.append(client_opts[client]['homeshare'])
