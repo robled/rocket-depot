@@ -5,76 +5,78 @@
 
 import os
 import string
+import ConfigParser
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
 
-# Path to config file
+# Path to config file along with a name we can use
 configfile = '%s/.rdesktop-opener' % os.environ['HOME']
+config = ConfigParser.RawConfigParser()
 
 # Default options.  Overridden by config file.
 options = {'host'          : 'host.example.com',
            'user'          : 'user',
            'geometry'      : '1024x768',
            'program'       : 'rdesktop',
-           'homeshare'     : 0,
-           'grabkeyboard'  : 0,
-           'fullscreen'    : 0
+           'homeshare'     : 'false',
+           'grabkeyboard'  : 'false',
+           'fullscreen'    : 'false'
             }
-
-optlist = ('host',
-           'user',
-           'geometry',
-           'program',
-           'homeshare',
-           'grabkeyboard',
-           'fullscreen'
-           )
 
 # We set the default RDP user to the local user by default
 if os.environ.has_key('USER'):
     options['user'] = os.environ['USER']
 
 # Write the config file
-def save_conf():
-    conf = open(configfile, 'w')
-    host = options['host']
-    user = options['user']
-    geometry = options['geometry']
-    program = options['program']
+def save_config(section):
 
     # Add options specified in the GUI if it's available.
     # GUI is not available when we are running for the first time and are
     # creating the initial config file.
     try:
         if options['host'] != string.strip(window.hostentry.get_text()):
-            host = string.strip(window.hostentry.get_text())
+            options['host'] = string.strip(window.hostentry.get_text())
         if options['user'] != string.strip(window.userentry.get_text()):
-            user = string.strip(window.userentry.get_text())
+            options['user'] = string.strip(window.userentry.get_text())
         if options['geometry'] != string.strip(window.geometryentry.get_text()):
-            geometry = string.strip(window.geometryentry.get_text())
+            options['geometry'] = string.strip(window.geometryentry.get_text())
     except NameError:
         pass
 
-    # Make list of options into CSV file
-    ofline = '%s,%s,%s,%s,' % (host, user, geometry, program)
-    ofline = ofline + '%s,%s,%s\n' % (
-        options['homeshare'], options['grabkeyboard'], options['fullscreen'])
-    conf.write(ofline)
-    conf.close()
+    # add the 'defaults' section if it doesn't exist
+    if not config.has_section(section):
+        config.add_section(section)
+    config.set(section, 'host', options['host'])
+    config.set(section, 'user', options['user'])
+    config.set(section, 'geometry', options['geometry'])
+    config.set(section, 'program', options['program'])
+    config.set(section, 'homeshare', options['homeshare'])
+    config.set(section, 'grabkeyboard', options['grabkeyboard'])
+    config.set(section, 'fullscreen', options['fullscreen'])
 
-# If config file doesn't exist, let's make one with default values, otherwise
-# load values saved by the user
-try:
-    conf = open(configfile, 'r')
-except IOError:
-    save_conf()
+    # Writing our configuration file
+    with open(configfile, 'wb') as f:
+        config.write(f)
+        f.close()
+
+def read_config(section):
+    options['host'] = config.get(section, 'host')
+    options['user'] = config.get(section, 'user')
+    options['geometry'] = config.get(section, 'geometry')
+    options['program'] = config.get(section, 'program')
+    if config.getboolean(section, 'homeshare'):
+        options['homeshare'] = config.get(section, 'homeshare')
+    if config.getboolean(section, 'grabkeyboard'):
+        options['grabkeyboard'] = config.get(section, 'grabkeyboard')
+    if config.getboolean(section, 'fullscreen'):
+        options['fullscreen'] = config.get(section, 'fullscreen')
+
+if not os.path.exists(configfile):
+    file(configfile, 'w').close()
+    save_config('defaults')
 else:
-    if conf:
-        readconf = string.strip(conf.readline())
-        optindex = 0
-        for opt in string.split(readconf, ','):
-            options[optlist[optindex]] = opt
-            optindex = optindex + 1
+    config.read(configfile)
+    read_config('defaults')
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
 def run_program():
@@ -118,11 +120,11 @@ def run_program():
         params.append(client_opts[client]['user'] + '%s' % string.strip(options['user']))
     if options['geometry'] != '':
         params.append(client_opts[client]['geometry'] + '%s' % string.strip(options['geometry']))
-    if options['fullscreen'] == 1:
+    if options['fullscreen'] == 'true':
         params.append(client_opts[client]['fullscreen'])
-    if options['grabkeyboard'] != 1:
+    if options['grabkeyboard'] == 'false':
         params.append(client_opts[client]['grabkeyboard'])
-    if options['homeshare'] == 1:
+    if options['homeshare'] == 'true':
         params.append(client_opts[client]['homeshare'])
     params.append(client_opts[client]['host'] + '%s' % string.strip(options['host']))
 
@@ -133,16 +135,16 @@ def run_program():
     os.spawnvp(os.P_NOWAIT, params[0], params)
     return
 
-# Print the list of options current selected for debugging
+# Print the list of options currently selected for debugging
 def print_options():
-    print '-- currently selected options --'
-    print 'host => ' + options['host']
-    print 'user => ' + options['user']
-    print 'geometry => ' + options['geometry']
-    print 'program => ' + options['program']
-    print 'homeshare => ' + str(options['homeshare'])
-    print 'grabkeyboard => ' + str(options['grabkeyboard'])
-    print 'fullscreen => ' + str(options['fullscreen'])
+    print 'Currently selected options:'
+    print 'host = ' + options['host']
+    print 'user = ' + options['user']
+    print 'geometry = ' + options['geometry']
+    print 'program = ' + options['program']
+    print 'homeshare = ' + options['homeshare']
+    print 'grabkeyboard = ' + options['grabkeyboard']
+    print 'fullscreen = ' + options['fullscreen']
 
 # Menu bar layout
 UI_INFO = """
@@ -226,19 +228,19 @@ class MainWindow(Gtk.Window):
         # Checkbox for sharing our home directory
         homedirbutton = Gtk.CheckButton("Share Home Dir")
         homedirbutton.connect("toggled", self.on_button_toggled, "homeshare")
-        if options['homeshare'] == '1':
+        if options['homeshare'] == 'true':
             homedirbutton.set_active(True)
 
         # Checkbox for grabbing the keyboard
         grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
         grabkeyboardbutton.connect("toggled", self.on_button_toggled, "grabkeyboard")
-        if options['grabkeyboard'] == '1':
+        if options['grabkeyboard'] == 'true':
             grabkeyboardbutton.set_active(True)
 
         # Checkbox for fullscreen view
         fullscreenbutton = Gtk.CheckButton("Fullscreen")
         fullscreenbutton.connect("toggled", self.on_button_toggled, "fullscreen")
-        if options['fullscreen'] == '1':
+        if options['fullscreen'] == 'true':
             fullscreenbutton.set_active(True)
 
         # Quit button
@@ -283,14 +285,17 @@ class MainWindow(Gtk.Window):
     # Triggered when the checkboxes are toggled
     def on_button_toggled(self, button, name):
         if button.get_active():
-            state = 1
+            state = 'true'
             options[name] = state
         else:
-            state = 0
+            state = 'false'
             options[name] = state
 
     # Triggered when the connect button is clicked
     def on_connectbutton_clicked(self, widget):
+        options['host'] = self.hostentry.get_text()
+        options['user'] = self.userentry.get_text()
+        options['geometry'] = self.geometryentry.get_text()
         run_program()
 
     # Triggered when the file menu is used
@@ -335,7 +340,7 @@ class MainWindow(Gtk.Window):
 
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_config(self, widget):
-        save_conf()
+        save_config('defaults')
 
     # When the quit button is clicked on the menu bar
     def on_menu_file_quit(self, widget):
