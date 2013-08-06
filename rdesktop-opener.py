@@ -59,6 +59,7 @@ def save_config(section):
         config.write(f)
         f.close()
 
+# Set options based on config file
 def read_config(section):
     options['host'] = config.get(section, 'host')
     options['user'] = config.get(section, 'user')
@@ -71,6 +72,7 @@ def read_config(section):
     if config.getboolean(section, 'fullscreen'):
         options['fullscreen'] = config.get(section, 'fullscreen')
 
+# Create the config file if it doesn't exist, otherwise read the existing file
 if not os.path.exists(configfile):
     file(configfile, 'w').close()
     save_config('defaults')
@@ -82,7 +84,7 @@ else:
 def run_program():
     client_opts = {
         'rdesktop': {
-            'stdopts': ['rdesktop', '-k', 'en-us', '-a', '16'],
+            'stdopts': ['rdesktop', '-ken-us', '-a16'],
             'host': '',
             'user': '-u',
             'geometry': '-g',
@@ -269,10 +271,11 @@ class MainWindow(Gtk.Window):
 
     # Triggered when the enter key is pressed on any text entry box
     def enter_callback(self, widget, entry):
-        options['host'] = self.hostentry.get_text()
-        options['user'] = self.userentry.get_text()
-        options['geometry'] = self.geometryentry.get_text()
-        run_program()
+        self.execute()
+
+    # Triggered when the connect button is clicked
+    def on_connectbutton_clicked(self, widget):
+        self.execute()
 
     # Triggered when the combobox is clicked
     def on_program_combo_changed(self, combo):
@@ -290,13 +293,6 @@ class MainWindow(Gtk.Window):
         else:
             state = 'false'
             options[name] = state
-
-    # Triggered when the connect button is clicked
-    def on_connectbutton_clicked(self, widget):
-        options['host'] = self.hostentry.get_text()
-        options['user'] = self.userentry.get_text()
-        options['geometry'] = self.geometryentry.get_text()
-        run_program()
 
     # Triggered when the file menu is used
     def add_file_menu_actions(self, action_group):
@@ -353,6 +349,13 @@ class MainWindow(Gtk.Window):
     # When the debug button is clicked on the menu bar
     def on_menu_debug(self, widget):
         print_options()
+
+    # Run our command line RDP client
+    def execute(self):
+        options['host'] = self.hostentry.get_text()
+        options['user'] = self.userentry.get_text()
+        options['geometry'] = self.geometryentry.get_text()
+        run_program()
 
     # Generic info dialog
     def on_info(self, widget):
