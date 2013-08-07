@@ -9,36 +9,57 @@ import ConfigParser
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
 
-# Path to config file along with a name we can use
-configfile = '%s/.rdesktop-opener' % os.environ['HOME']
-config = ConfigParser.RawConfigParser()
-
 # Default options.  Overridden by config file.
-options = {'host': 'host.example.com',
-           'user': 'user',
-           'geometry': '1024x768',
-           'program': 'rdesktop',
-           'homeshare': 'false',
-           'grabkeyboard': 'false',
-           'fullscreen': 'false'}
+options = {
+    'host': 'host.example.com',
+    # set the default RDP user to the local user by default
+    'user': os.environ.get('USER', 'user'),
+    'geometry': '1024x768',
+    'program': 'rdesktop',
+    'homeshare': 'false',
+    'grabkeyboard': 'false',
+    'fullscreen': 'false'
+}
 
-# We set the default RDP user to the local user by default
-if 'USER' in os.environ:
-    options['user'] = os.environ['USER']
+# Menu bar layout
+UI_INFO = """
+<ui>
+  <menubar name='MenuBar'>
+    <menu action='FileMenu'>
+      <menuitem action='SaveCurrentConfig' />
+      <menuitem action='FileQuit' />
+    </menu>
+    <menu action='OptionMenu'>
+      <menuitem action='PrintDebug' />
+    </menu>
+    <menu action='Help'>
+      <menuitem action='About'/>
+    </menu>
+  </menubar>
+</ui>
+"""
 
+OPTIONS_TEMPLATE = '''Currently selected options:
+host = %(host)s
+user = %(user)s
+geometry = %(geometry)s
+program = %(programs)s
+homeshare = %(homeshare)s
+grabkeyboard = %(grabkeyboard)s
+fullscreen = %(fullscreen)s
+'''
 
 # Write the config file
-def save_config(section):
-
+def save_config(section, configfile, window=None):
     # Add options specified in the GUI if it's available.
     # GUI is not available when we are running for the first time and are
     # creating the initial config file.
-    try:
+    config = read_config(section, configfile)
+
+    if window:
         options['host'] = string.strip(window.hostentry.get_text())
         options['user'] = string.strip(window.userentry.get_text())
         options['geometry'] = string.strip(window.geometryentry.get_text())
-    except NameError:
-        pass
 
     # add the 'defaults' section if it doesn't exist
     if not config.has_section(section):
@@ -56,9 +77,15 @@ def save_config(section):
         config.write(f)
         f.close()
 
-
 # Set options based on config file
-def read_config(section):
+def read_config(section, configfile):
+    # Create the config file if it doesn't exist, otherwise read the existing file
+    if not os.path.exists(configfile):
+        save_config('defaults', configfile)
+
+    config = ConfigParser.RawConfigParser()
+    config.read(configfile)
+
     options['host'] = config.get(section, 'host')
     options['user'] = config.get(section, 'user')
     options['geometry'] = config.get(section, 'geometry')
@@ -69,18 +96,11 @@ def read_config(section):
         options['grabkeyboard'] = config.get(section, 'grabkeyboard')
     if config.getboolean(section, 'fullscreen'):
         options['fullscreen'] = config.get(section, 'fullscreen')
-
-# Create the config file if it doesn't exist, otherwise read the existing file
-if not os.path.exists(configfile):
-    file(configfile, 'w').close()
-    save_config('defaults')
-else:
-    config.read(configfile)
-    read_config('defaults')
-
+    
+    return config
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
-def run_program():
+def run_program(window):
     client_opts = {
         'rdesktop': {
             'stdopts': ['rdesktop', '-ken-us', '-a16'],
@@ -136,41 +156,14 @@ def run_program():
     os.spawnvp(os.P_NOWAIT, params[0], params)
     return
 
-
 # Print the list of options currently selected for debugging
 def print_options():
-    print 'Currently selected options:'
-    print 'host = ' + options['host']
-    print 'user = ' + options['user']
-    print 'geometry = ' + options['geometry']
-    print 'program = ' + options['program']
-    print 'homeshare = ' + options['homeshare']
-    print 'grabkeyboard = ' + options['grabkeyboard']
-    print 'fullscreen = ' + options['fullscreen']
-
-# Menu bar layout
-UI_INFO = """
-<ui>
-  <menubar name='MenuBar'>
-    <menu action='FileMenu'>
-      <menuitem action='SaveCurrentConfig' />
-      <menuitem action='FileQuit' />
-    </menu>
-    <menu action='OptionMenu'>
-      <menuitem action='PrintDebug' />
-    </menu>
-    <menu action='Help'>
-      <menuitem action='About'/>
-    </menu>
-  </menubar>
-</ui>
-"""
-
+    print OPTIONS_TEMPLATE % options
 
 # GUI stuff
 class MainWindow(Gtk.Window):
-
-    def __init__(self):
+    def __init__(self, configfile):
+        self.configfile = configfile
 
         # Window properties
         Gtk.Window.__init__(self, title="rdesktop-opener", resizable=0)
@@ -337,7 +330,7 @@ class MainWindow(Gtk.Window):
 
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_config(self, widget):
-        save_config('defaults')
+        save_config('defaults', self.configfile, self)
 
     # When the quit button is clicked on the menu bar
     def on_menu_file_quit(self, widget):
@@ -356,13 +349,13 @@ class MainWindow(Gtk.Window):
         options['host'] = self.hostentry.get_text()
         options['user'] = self.userentry.get_text()
         options['geometry'] = self.geometryentry.get_text()
-        run_program()
+        run_program(self)
 
     # Generic info dialog
     def on_info(self, widget):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
-                                   Gtk.ButtonsType.OK, "This is an INFO MessageDialog",
-                                   title='rdesktop-opener')
+                Gtk.ButtonsType.OK, "This is an INFO MessageDialog",
+                title='rdesktop-opener')
         dialog.format_secondary_text(
             "And this is the secondary text that explains things.")
         dialog.run()
@@ -371,7 +364,7 @@ class MainWindow(Gtk.Window):
     # Generic warning dialog
     def on_warn(self, widget, title, message):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
-                                   Gtk.ButtonsType.OK, title, title='rdesktop-opener')
+                Gtk.ButtonsType.OK, title, title='rdesktop-opener')
         dialog.format_secondary_text(message)
         response = dialog.run()
         dialog.destroy()
@@ -382,15 +375,22 @@ class MainWindow(Gtk.Window):
         about.set_program_name("rdesktop-opener")
         about.set_version("0.0")
 
-        # meh.
-        #about.set_copyright("(c) aperson")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rdesktop-opener")
         about.run()
         about.destroy()
 
-# Make the GUI!
-window = MainWindow()
-window.connect("delete-event", Gtk.main_quit)
-window.show_all()
-Gtk.main()
+
+def _main():
+    # Path to config file along with a name we can use
+    configfile = '%s/.rdesktop-opener' % os.environ['HOME']
+    read_config(configfile)
+
+    # Make the GUI!
+    window = MainWindow(configfile)
+    window.connect("delete-event", Gtk.main_quit)
+    window.show_all()
+    Gtk.main()
+
+if __name__ == '__main__':
+    _main()
