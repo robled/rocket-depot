@@ -43,7 +43,7 @@ OPTIONS_TEMPLATE = '''Currently selected options:
 host = %(host)s
 user = %(user)s
 geometry = %(geometry)s
-program = %(programs)s
+program = %(program)s
 homeshare = %(homeshare)s
 grabkeyboard = %(grabkeyboard)s
 fullscreen = %(fullscreen)s
@@ -54,7 +54,7 @@ def save_config(section, configfile, window=None):
     # Add options specified in the GUI if it's available.
     # GUI is not available when we are running for the first time and are
     # creating the initial config file.
-    config = read_config(section, configfile)
+    config = ConfigParser.RawConfigParser()
 
     if window:
         options['host'] = string.strip(window.hostentry.get_text())
@@ -96,7 +96,7 @@ def read_config(section, configfile):
         options['grabkeyboard'] = config.get(section, 'grabkeyboard')
     if config.getboolean(section, 'fullscreen'):
         options['fullscreen'] = config.get(section, 'fullscreen')
-    
+
     return config
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
@@ -342,6 +342,9 @@ class MainWindow(Gtk.Window):
 
     # When the debug button is clicked on the menu bar
     def on_menu_debug(self, widget):
+        options['host'] = self.hostentry.get_text()
+        options['user'] = self.userentry.get_text()
+        options['geometry'] = self.geometryentry.get_text()
         print_options()
 
     # Run our command line RDP client
@@ -384,7 +387,7 @@ class MainWindow(Gtk.Window):
 def _main():
     # Path to config file along with a name we can use
     configfile = '%s/.rdesktop-opener' % os.environ['HOME']
-    read_config(configfile)
+    read_config('defaults', configfile)
 
     # Make the GUI!
     window = MainWindow(configfile)
