@@ -49,6 +49,7 @@ grabkeyboard = %(grabkeyboard)s
 fullscreen = %(fullscreen)s
 '''
 
+
 # Write the config file
 def save_config(section, configfile, window=None):
     # Add options specified in the GUI if it's available.
@@ -77,9 +78,11 @@ def save_config(section, configfile, window=None):
         config.write(f)
         f.close()
 
+
 # Set options based on config file
 def read_config(section, configfile):
-    # Create the config file if it doesn't exist, otherwise read the existing file
+    # Create the config file if it doesn't exist, otherwise read the existing
+    # file
     if not os.path.exists(configfile):
         save_config('defaults', configfile)
 
@@ -98,6 +101,7 @@ def read_config(section, configfile):
         options['fullscreen'] = config.get(section, 'fullscreen')
 
     return config
+
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
 def run_program(window):
@@ -138,16 +142,19 @@ def run_program(window):
 
     # Add specified options to the parameter list
     if options['user'] != '':
-        params.append(client_opts[client]['user'] + '%s' % string.strip(options['user']))
+        params.append(client_opts[client]['user']
+                      + '%s' % string.strip(options['user']))
     if options['geometry'] != '':
-        params.append(client_opts[client]['geometry'] + '%s' % string.strip(options['geometry']))
+        params.append(client_opts[client]['geometry']
+                      + '%s' % string.strip(options['geometry']))
     if options['fullscreen'] == 'true':
         params.append(client_opts[client]['fullscreen'])
     if options['grabkeyboard'] == 'false':
         params.append(client_opts[client]['grabkeyboard'])
     if options['homeshare'] == 'true':
         params.append(client_opts[client]['homeshare'])
-    params.append(client_opts[client]['host'] + '%s' % string.strip(options['host']))
+    params.append(client_opts[client]['host']
+                  + '%s' % string.strip(options['host']))
 
     # Print the command line that we constructed to the terminal
     print 'Command to execute: \n' + ' '.join(str(param) for param in params)
@@ -156,9 +163,11 @@ def run_program(window):
     os.spawnvp(os.P_NOWAIT, params[0], params)
     return
 
+
 # Print the list of options currently selected for debugging
 def print_options():
     print OPTIONS_TEMPLATE % options
+
 
 # GUI stuff
 class MainWindow(Gtk.Window):
@@ -202,7 +211,8 @@ class MainWindow(Gtk.Window):
         self.userentry.connect("activate", self.enter_callback, self.userentry)
         self.geometryentry = Gtk.Entry()
         self.geometryentry.set_text(options['geometry'])
-        self.geometryentry.connect("activate", self.enter_callback, self.geometryentry)
+        self.geometryentry.connect("activate",
+                                   self.enter_callback, self.geometryentry)
 
         # Combobox for program selection
         program_store = Gtk.ListStore(str)
@@ -229,13 +239,15 @@ class MainWindow(Gtk.Window):
 
         # Checkbox for grabbing the keyboard
         grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
-        grabkeyboardbutton.connect("toggled", self.on_button_toggled, "grabkeyboard")
+        grabkeyboardbutton.connect("toggled", self.on_button_toggled,
+                                   "grabkeyboard")
         if options['grabkeyboard'] == 'true':
             grabkeyboardbutton.set_active(True)
 
         # Checkbox for fullscreen view
         fullscreenbutton = Gtk.CheckButton("Fullscreen")
-        fullscreenbutton.connect("toggled", self.on_button_toggled, "fullscreen")
+        fullscreenbutton.connect("toggled", self.on_button_toggled,
+                                 "fullscreen")
         if options['fullscreen'] == 'true':
             fullscreenbutton.set_active(True)
 
@@ -253,15 +265,22 @@ class MainWindow(Gtk.Window):
         grid.attach(userlabel, 0, 8, 4, 4)
         grid.attach(geometrylabel, 0, 16, 4, 4)
         grid.attach(programlabel, 0, 20, 4, 4)
-        grid.attach_next_to(self.hostentry, hostlabel, Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(self.userentry, userlabel, Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(self.geometryentry, geometrylabel, Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(program_combo, programlabel, Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.hostentry, hostlabel,
+                            Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.userentry, userlabel,
+                            Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.geometryentry, geometrylabel,
+                            Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(program_combo, programlabel,
+                            Gtk.PositionType.RIGHT, 8, 4)
         grid.attach(homedirbutton, 0, 24, 4, 4)
-        grid.attach_next_to(grabkeyboardbutton, homedirbutton, Gtk.PositionType.RIGHT, 4, 4)
-        grid.attach_next_to(fullscreenbutton, grabkeyboardbutton, Gtk.PositionType.RIGHT, 4, 4)
+        grid.attach_next_to(grabkeyboardbutton, homedirbutton,
+                            Gtk.PositionType.RIGHT, 4, 4)
+        grid.attach_next_to(fullscreenbutton, grabkeyboardbutton,
+                            Gtk.PositionType.RIGHT, 4, 4)
         grid.attach(quitbutton, 0, 28, 4, 4)
-        grid.attach_next_to(connectbutton, quitbutton, Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(connectbutton, quitbutton,
+                            Gtk.PositionType.RIGHT, 8, 4)
 
     # Triggered when the enter key is pressed on any text entry box
     def enter_callback(self, widget, entry):
@@ -292,10 +311,9 @@ class MainWindow(Gtk.Window):
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
         action_group.add_action(action_filemenu)
-        action_group.add_actions([
-            ("SaveCurrentConfig", None, "Save Current Configuration", None, None,
-             self.on_menu_file_save_config),
-        ])
+        action_group.add_actions([("SaveCurrentConfig", None,
+                                   "Save Current Configuration", None, None,
+                                   self.on_menu_file_save_config)])
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.on_menu_file_quit)
         action_group.add_action(action_filequit)
@@ -357,8 +375,9 @@ class MainWindow(Gtk.Window):
     # Generic info dialog
     def on_info(self, widget):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
-                Gtk.ButtonsType.OK, "This is an INFO MessageDialog",
-                title='rdesktop-opener')
+                                   Gtk.ButtonsType.OK,
+                                   "This is an INFO MessageDialog",
+                                   title='rdesktop-opener')
         dialog.format_secondary_text(
             "And this is the secondary text that explains things.")
         dialog.run()
@@ -367,7 +386,8 @@ class MainWindow(Gtk.Window):
     # Generic warning dialog
     def on_warn(self, widget, title, message):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
-                Gtk.ButtonsType.OK, title, title='rdesktop-opener')
+                                   Gtk.ButtonsType.OK, title,
+                                   title='rdesktop-opener')
         dialog.format_secondary_text(message)
         response = dialog.run()
         dialog.destroy()
