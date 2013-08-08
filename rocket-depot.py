@@ -175,12 +175,12 @@ class MainWindow(Gtk.Window):
         self.configfile = configfile
 
         # Window properties
-        Gtk.Window.__init__(self, title="rdesktop-opener", resizable=0)
+        Gtk.Window.__init__(self, title="rocket-depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(8)
         progicon = Gtk.IconTheme.get_default().load_icon('gnome-fs-web', 64, 0)
         self.set_icon(progicon)
-        self.set_wmclass('rdesktop-opener', 'rdesktop-opener')
+        self.set_wmclass('rocket-depot', 'rocket-depot')
 
         # Menu bar
         action_group = Gtk.ActionGroup("Menu")
@@ -377,7 +377,7 @@ class MainWindow(Gtk.Window):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
                                    Gtk.ButtonsType.OK,
                                    "This is an INFO MessageDialog",
-                                   title='rdesktop-opener')
+                                   title='rocket-depot')
         dialog.format_secondary_text(
             "And this is the secondary text that explains things.")
         dialog.run()
@@ -387,7 +387,7 @@ class MainWindow(Gtk.Window):
     def on_warn(self, widget, title, message):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
                                    Gtk.ButtonsType.OK, title,
-                                   title='rdesktop-opener')
+                                   title='rocket-depot')
         dialog.format_secondary_text(message)
         response = dialog.run()
         dialog.destroy()
@@ -395,18 +395,18 @@ class MainWindow(Gtk.Window):
     # About dialog
     def on_about(self, widget):
         about = Gtk.AboutDialog()
-        about.set_program_name("rdesktop-opener")
+        about.set_program_name("rocket-depot")
         about.set_version("0.0")
 
         about.set_comments("rdesktop/xfreerdp Frontend")
-        about.set_website("https://github.com/robled/rdesktop-opener")
+        about.set_website("https://github.com/robled/rocket-depot")
         about.run()
         about.destroy()
 
 
 def _main():
     # Path to config file along with a name we can use
-    configfile = '%s/.rdesktop-opener' % os.environ['HOME']
+    configfile = '%s/.rocket-depot' % os.environ['HOME']
     read_config('defaults', configfile)
 
     # Make the GUI!
