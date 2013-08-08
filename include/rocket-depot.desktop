@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=rdesktop-opener
+Name=rocket-depot
 Categories=Network;Application;
 Icon=gnome-fs-web
-Exec=/path/to/rdesktop-opener.py
-StartupWMClass=rdesktop-opener
+Exec=/path/to/rocket-depot.py
+StartupWMClass=rocket-depot
