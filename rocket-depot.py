@@ -76,7 +76,6 @@ def save_config(section, configfile, window=None):
     # Writing our configuration file
     with open(configfile, 'wb') as f:
         config.write(f)
-        f.close()
 
 
 # Set options based on config file
