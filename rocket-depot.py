@@ -52,15 +52,10 @@ fullscreen = %(fullscreen)s
 
 # Write the config file
 def save_config(section, configfile, window=None):
-    # Add options specified in the GUI if it's available.
-    # GUI is not available when we are running for the first time and are
-    # creating the initial config file.
     config = read_config(section, configfile)
 
     if window:
-        options['host'] = string.strip(window.hostentry.get_text())
-        options['user'] = string.strip(window.userentry.get_text())
-        options['geometry'] = string.strip(window.geometryentry.get_text())
+        window.grab_textboxes()
 
     # add the 'defaults' section if it doesn't exist
     if not config.has_section(section):
@@ -356,18 +351,20 @@ class MainWindow(Gtk.Window):
     def on_menu_help(self, widget):
         self.on_about(widget)
 
-    # When the debug button is clicked on the menu bar
-    def on_menu_debug(self, widget):
+    # Grab all textbox input
+    def grab_textboxes(self):
         options['host'] = self.hostentry.get_text()
         options['user'] = self.userentry.get_text()
         options['geometry'] = self.geometryentry.get_text()
+
+    # When the debug button is clicked on the menu bar
+    def on_menu_debug(self, widget):
+        self.grab_textboxes()
         print_options()
 
     # Run our command line RDP client
     def execute(self):
-        options['host'] = self.hostentry.get_text()
-        options['user'] = self.userentry.get_text()
-        options['geometry'] = self.geometryentry.get_text()
+        self.grab_textboxes()
         run_program(self)
 
     # Generic info dialog
