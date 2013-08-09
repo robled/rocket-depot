@@ -55,7 +55,7 @@ def save_config(section, configfile, window=None):
     # Add options specified in the GUI if it's available.
     # GUI is not available when we are running for the first time and are
     # creating the initial config file.
-    config = ConfigParser.RawConfigParser()
+    config = read_config(section, configfile)
 
     if window:
         options['host'] = string.strip(window.hostentry.get_text())
@@ -82,22 +82,21 @@ def save_config(section, configfile, window=None):
 def read_config(section, configfile):
     # Create the config file if it doesn't exist, otherwise read the existing
     # file
-    if not os.path.exists(configfile):
-        save_config('defaults', configfile)
 
     config = ConfigParser.RawConfigParser()
     config.read(configfile)
 
-    options['host'] = config.get(section, 'host')
-    options['user'] = config.get(section, 'user')
-    options['geometry'] = config.get(section, 'geometry')
-    options['program'] = config.get(section, 'program')
-    if config.getboolean(section, 'homeshare'):
-        options['homeshare'] = config.get(section, 'homeshare')
-    if config.getboolean(section, 'grabkeyboard'):
-        options['grabkeyboard'] = config.get(section, 'grabkeyboard')
-    if config.getboolean(section, 'fullscreen'):
-        options['fullscreen'] = config.get(section, 'fullscreen')
+    if os.path.exists(configfile):
+        options['host'] = config.get(section, 'host')
+        options['user'] = config.get(section, 'user')
+        options['geometry'] = config.get(section, 'geometry')
+        options['program'] = config.get(section, 'program')
+        if config.getboolean(section, 'homeshare'):
+            options['homeshare'] = config.get(section, 'homeshare')
+        if config.getboolean(section, 'grabkeyboard'):
+            options['grabkeyboard'] = config.get(section, 'grabkeyboard')
+        if config.getboolean(section, 'fullscreen'):
+            options['fullscreen'] = config.get(section, 'fullscreen')
 
     return config
 
@@ -396,7 +395,6 @@ class MainWindow(Gtk.Window):
         about = Gtk.AboutDialog()
         about.set_program_name("rocket-depot")
         about.set_version("0.0")
-
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
         about.run()
@@ -404,7 +402,7 @@ class MainWindow(Gtk.Window):
 
 
 def _main():
-    # Path to config file along with a name we can use
+    # Path to config file
     configfile = '%s/.rocket-depot' % os.environ['HOME']
     read_config('defaults', configfile)
 
@@ -413,6 +411,7 @@ def _main():
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
     Gtk.main()
+    save_config('defaults', configfile)
 
 if __name__ == '__main__':
     _main()
