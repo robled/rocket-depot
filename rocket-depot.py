@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-# Originally written by Cory Wright
-# http://projects.standblue.net/software/#rdesktop-open
-
 import os
 import string
+import subprocess
+import time
 import ConfigParser
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
@@ -153,7 +152,15 @@ def run_program(window):
     print 'Command to execute: \n' + ' '.join(str(param) for param in params)
 
     # Make it go!
-    os.spawnvp(os.P_NOWAIT, params[0], params)
+    p = subprocess.Popen(params, stderr=subprocess.PIPE)
+
+    # Wait for DNS resolution or connection failures
+    time.sleep(2)
+
+    # If RDP client died, display stderr via popup
+    if p.poll() != None:
+        window.on_warn(0, 'Connection Error', '%s: \n' % client + 
+                       p.communicate()[1])
     return
 
 
@@ -166,6 +173,8 @@ def print_options():
 class MainWindow(Gtk.Window):
     def __init__(self, configfile):
         self.configfile = configfile
+        GObject.threads_init()
+        Gdk.threads_init()
 
         # Window properties
         Gtk.Window.__init__(self, title="rocket-depot", resizable=0)
