@@ -155,7 +155,7 @@ def run_program(window):
     p = subprocess.Popen(params, stderr=subprocess.PIPE)
 
     # Wait for DNS resolution or connection failures
-    time.sleep(2)
+    time.sleep(1)
 
     # If RDP client died, display stderr via popup
     if p.poll() != None:
