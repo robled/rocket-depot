@@ -173,8 +173,6 @@ def print_options():
 class MainWindow(Gtk.Window):
     def __init__(self, configfile):
         self.configfile = configfile
-        GObject.threads_init()
-        Gdk.threads_init()
 
         # Window properties
         Gtk.Window.__init__(self, title="rocket-depot", resizable=0)
