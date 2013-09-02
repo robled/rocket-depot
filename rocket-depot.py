@@ -291,7 +291,7 @@ class MainWindow(Gtk.Window):
                             Gtk.PositionType.RIGHT, 8, 4)
 
         self.load_settings()
-        self.profilename = '' 
+        self.profilename = 'defaults' 
 
 
     # Triggered when the enter key is pressed on any text entry box
