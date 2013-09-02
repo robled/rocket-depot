@@ -7,7 +7,7 @@ import time
 import ConfigParser
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
-    
+
 # Our config file
 configfile = '%s/.rocket-depot' % os.environ['HOME']
 config = ConfigParser.RawConfigParser()
@@ -56,10 +56,10 @@ fullscreen = %(fullscreen)s
 
 # Write the config file
 def save_config(section, configfile, window=None):
+    # if the UI is running, let's see what's in the textboxes
     if window:
         window.grab_textboxes()
-
-    # add the 'defaults' section if it doesn't exist
+    # add the new section if it doesn't exist
     if not config.has_section(section):
         config.add_section(section)
     config.set(section, 'host', options['host'])
@@ -69,7 +69,6 @@ def save_config(section, configfile, window=None):
     config.set(section, 'homeshare', options['homeshare'])
     config.set(section, 'grabkeyboard', options['grabkeyboard'])
     config.set(section, 'fullscreen', options['fullscreen'])
-
     # Writing our configuration file
     with open(configfile, 'wb') as f:
         config.write(f)
@@ -77,9 +76,6 @@ def save_config(section, configfile, window=None):
 
 # Set options based on config file
 def read_config(section, configfile):
-    # Create the config file if it doesn't exist, otherwise read the existing
-    # file
-
     if os.path.exists(configfile):
         options['host'] = config.get(section, 'host')
         options['user'] = config.get(section, 'user')
@@ -89,8 +85,10 @@ def read_config(section, configfile):
         options['grabkeyboard'] = config.get(section, 'grabkeyboard')
         options['fullscreen'] = config.get(section, 'fullscreen')
 
+
 def list_profiles(configfile):
     return config.sections()
+
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
 def run_program(window):
@@ -115,20 +113,17 @@ def run_program(window):
         }
     }
 
+    # This makes the next bit a little cleaner name-wise
     client = options['program']
-
     # List of commandline paramenters for our RDP client
     params = []
-
     # Add standard options to the parameter list
     for x in client_opts[client]['stdopts']:
         params.append(x)
-
     # Throw an error if the required host field is empty
     if not options['host']:
         window.on_warn(0, 'No Host', 'No Host or IP Address Given')
         return
-
     # Add specified options to the parameter list
     if options['user'] != '':
         params.append(client_opts[client]['user']
@@ -144,19 +139,15 @@ def run_program(window):
         params.append(client_opts[client]['homeshare'])
     params.append(client_opts[client]['host']
                   + '%s' % string.strip(options['host']))
-
     # Print the command line that we constructed to the terminal
     print 'Command to execute: \n' + ' '.join(str(param) for param in params)
-
     # Make it go!
     p = subprocess.Popen(params, stderr=subprocess.PIPE)
-
     # Wait for DNS resolution or connection failures
     time.sleep(1)
-
     # If RDP client died, display stderr via popup
     if p.poll() != None:
-        window.on_warn(0, 'Connection Error', '%s: \n' % client + 
+        window.on_warn(0, 'Connection Error', '%s: \n' % client +
                        p.communicate()[1])
 
 
@@ -168,7 +159,6 @@ def print_options():
 # GUI stuff
 class MainWindow(Gtk.Window):
     def __init__(self, configfile):
-
         # Window properties
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -197,8 +187,6 @@ class MainWindow(Gtk.Window):
         userlabel = Gtk.Label("Username")
         geometrylabel = Gtk.Label("Geometry")
         programlabel = Gtk.Label("RDP Client")
-
-        # Combobox for program selection
 
         # Adding our list of profiles to the combobox.
         profiles_combo = Gtk.ComboBoxText.new_with_entry()
@@ -231,10 +219,10 @@ class MainWindow(Gtk.Window):
         self.program_combo.pack_start(self.program_renderer_text, True)
         self.program_combo.add_attribute(self.program_renderer_text, "text", 0)
 
-        # Checkboxes for our toggle options
         # Checkbox for sharing our home directory
         self.homedirbutton = Gtk.CheckButton("Share Home Dir")
-        self.homedirbutton.connect("toggled", self.on_button_toggled, "homeshare")
+        self.homedirbutton.connect("toggled", self.on_button_toggled,
+                                   "homeshare")
 
         # Checkbox for grabbing the keyboard
         self.grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
@@ -280,9 +268,9 @@ class MainWindow(Gtk.Window):
         grid.attach_next_to(connectbutton, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
+        # Define initial profile data
         self.load_settings()
-        self.profilename = 'defaults' 
-
+        self.profilename = 'defaults'
 
     # Triggered when the enter key is pressed on any text entry box
     def enter_callback(self, widget, entry):
@@ -299,7 +287,7 @@ class MainWindow(Gtk.Window):
             if text == profile:
                 read_config(text, configfile)
                 self.load_settings()
-        self.profilename = text    
+        self.profilename = text
 
     # Triggered when the combobox is clicked
     def on_program_combo_changed(self, combo):
@@ -322,7 +310,6 @@ class MainWindow(Gtk.Window):
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
         action_group.add_action(action_filemenu)
-
         # Why do the functions here execute on startup if we add parameters?
         action_group.add_actions([("SaveCurrentConfig", None,
                                    "Save Current Profile", None, None,
@@ -350,10 +337,8 @@ class MainWindow(Gtk.Window):
     # Needed for the menu bar, I think
     def create_ui_manager(self):
         uimanager = Gtk.UIManager()
-
         # Throws exception if something went wrong
         uimanager.add_ui_from_string(UI_INFO)
-
         # Add the accelerator group to the toplevel window
         accelgroup = uimanager.get_accel_group()
         self.add_accel_group(accelgroup)
@@ -362,7 +347,8 @@ class MainWindow(Gtk.Window):
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_current_config(self, widget):
         if self.profilename == '':
-            self.on_warn(0, 'No Profile Name', 'Please name your profile before saving.')
+            self.on_warn(0, 'No Profile Name',
+                         'Please name your profile before saving.')
         else:
             save_config(self.profilename, configfile, self)
 
@@ -432,12 +418,10 @@ class MainWindow(Gtk.Window):
 def _main():
     read_config('defaults', configfile)
     save_config('defaults', configfile)
-
     # Make the GUI!
     window = MainWindow(configfile)
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
-
     # Set focus to the host entry box on startup
     window.hostentry.grab_focus()
     Gtk.main()
