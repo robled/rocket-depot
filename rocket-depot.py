@@ -210,12 +210,11 @@ class MainWindow(Gtk.Window):
 
         # Combobox for program selection
 
-        # Adding our list of profiles to the combobox.  We add these boolean
-        # values since the widget needs a boolean to define which selection is
-        # active
+        # Adding our list of profiles to the combobox.
         profiles_combo = Gtk.ComboBoxText.new_with_entry()
         for profile in list_profiles(configfile):
             profiles_combo.append_text(profile)
+        profiles_combo.set_active(0)
         profiles_combo.connect("changed", self.on_profiles_combo_changed)
 
         # Text entry fields
