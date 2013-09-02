@@ -206,7 +206,7 @@ class MainWindow(Gtk.Window):
         hostlabel = Gtk.Label("Host")
         userlabel = Gtk.Label("Username")
         geometrylabel = Gtk.Label("Geometry")
-        programlabel = Gtk.Label("Program")
+        programlabel = Gtk.Label("RDP Client")
 
         # Combobox for program selection
 
