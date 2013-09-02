@@ -180,7 +180,7 @@ class MainWindow(Gtk.Window):
         self.configfile = configfile
 
         # Window properties
-        Gtk.Window.__init__(self, title="rocket-depot", resizable=0)
+        Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(8)
         progicon = Gtk.IconTheme.get_default().load_icon('gnome-fs-web', 64, 0)
@@ -405,7 +405,7 @@ class MainWindow(Gtk.Window):
     def on_warn(self, widget, title, message):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
                                    Gtk.ButtonsType.OK, title,
-                                   title='rocket-depot')
+                                   title='Rocket Depot')
         dialog.format_secondary_text(message)
         response = dialog.run()
         dialog.destroy()
@@ -413,7 +413,7 @@ class MainWindow(Gtk.Window):
     # About dialog
     def on_about(self, widget):
         about = Gtk.AboutDialog()
-        about.set_program_name("rocket-depot")
+        about.set_program_name("Rocket Depot")
         about.set_version("0.0")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
