@@ -7,6 +7,9 @@ import time
 import ConfigParser
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
+    
+# Path to our config file
+configfile = '%s/.rocket-depot' % os.environ['HOME']
 
 # Default options.  Overridden by config file.
 options = {
@@ -26,6 +29,7 @@ UI_INFO = """
   <menubar name='MenuBar'>
     <menu action='FileMenu'>
       <menuitem action='SaveCurrentConfig' />
+      <menuitem action='SaveAsDefault' />
       <menuitem action='FileQuit' />
     </menu>
     <menu action='OptionMenu'>
@@ -51,7 +55,8 @@ fullscreen = %(fullscreen)s
 
 # Write the config file
 def save_config(section, configfile, window=None):
-    config = read_config(section, configfile)
+    config = ConfigParser.RawConfigParser()
+    config.read(configfile)
 
     if window:
         window.grab_textboxes()
@@ -94,6 +99,10 @@ def read_config(section, configfile):
 
     return config
 
+def list_profiles(configfile):
+    config = ConfigParser.RawConfigParser()
+    config.read(configfile)
+    return config.sections()
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
 def run_program(window):
@@ -197,59 +206,60 @@ class MainWindow(Gtk.Window):
         self.add(grid)
 
         # Labels for text entry fields and comboboxes
+        profileslabel = Gtk.Label("Profile")
         hostlabel = Gtk.Label("Host")
         userlabel = Gtk.Label("Username")
         geometrylabel = Gtk.Label("Geometry")
         programlabel = Gtk.Label("Program")
 
+        # Combobox for program selection
+
+        # Adding our list of profiles to the combobox.  We add these boolean
+        # values since the widget needs a boolean to define which selection is
+        # active
+        profiles_combo = Gtk.ComboBoxText.new_with_entry()
+        for profile in list_profiles(configfile):
+            profiles_combo.append_text(profile)
+        profiles_combo.connect("changed", self.on_profiles_combo_changed)
+
         # Text entry fields
         self.hostentry = Gtk.Entry()
-        self.hostentry.set_text(options['host'])
         self.hostentry.connect("activate", self.enter_callback, self.hostentry)
         self.userentry = Gtk.Entry()
-        self.userentry.set_text(options['user'])
         self.userentry.connect("activate", self.enter_callback, self.userentry)
         self.geometryentry = Gtk.Entry()
-        self.geometryentry.set_text(options['geometry'])
         self.geometryentry.connect("activate",
                                    self.enter_callback, self.geometryentry)
 
         # Combobox for program selection
         program_store = Gtk.ListStore(str)
-        programs = {'rdesktop': 1, 'xfreerdp': 0}
+        self.programs = {'rdesktop': 1, 'xfreerdp': 0}
 
         # Adding our list of programs to the combobox.  We add these boolean
         # values since the widget needs a boolean to define which selection is
         # active
-        for key in programs:
+        for key in self.programs:
             program_store.append([key])
-        program_combo = Gtk.ComboBox.new_with_model(program_store)
-        program_combo.connect("changed", self.on_program_combo_changed)
-        renderer_text = Gtk.CellRendererText()
-        program_combo.pack_start(renderer_text, True)
-        program_combo.add_attribute(renderer_text, "text", 0)
-        program_combo.set_active(programs[options['program']])
+        self.program_combo = Gtk.ComboBox.new_with_model(program_store)
+        self.program_combo.connect("changed", self.on_program_combo_changed)
+        self.program_renderer_text = Gtk.CellRendererText()
+        self.program_combo.pack_start(self.program_renderer_text, True)
+        self.program_combo.add_attribute(self.program_renderer_text, "text", 0)
 
         # Checkboxes for our toggle options
         # Checkbox for sharing our home directory
-        homedirbutton = Gtk.CheckButton("Share Home Dir")
-        homedirbutton.connect("toggled", self.on_button_toggled, "homeshare")
-        if options['homeshare'] == 'true':
-            homedirbutton.set_active(True)
+        self.homedirbutton = Gtk.CheckButton("Share Home Dir")
+        self.homedirbutton.connect("toggled", self.on_button_toggled, "homeshare")
 
         # Checkbox for grabbing the keyboard
-        grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
-        grabkeyboardbutton.connect("toggled", self.on_button_toggled,
+        self.grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
+        self.grabkeyboardbutton.connect("toggled", self.on_button_toggled,
                                    "grabkeyboard")
-        if options['grabkeyboard'] == 'true':
-            grabkeyboardbutton.set_active(True)
 
         # Checkbox for fullscreen view
-        fullscreenbutton = Gtk.CheckButton("Fullscreen")
-        fullscreenbutton.connect("toggled", self.on_button_toggled,
+        self.fullscreenbutton = Gtk.CheckButton("Fullscreen")
+        self.fullscreenbutton.connect("toggled", self.on_button_toggled,
                                  "fullscreen")
-        if options['fullscreen'] == 'true':
-            fullscreenbutton.set_active(True)
 
         # Quit button
         quitbutton = Gtk.Button(label="Quit")
@@ -261,26 +271,33 @@ class MainWindow(Gtk.Window):
 
         # Grid to which we attach all of our widgets
         grid.attach(menubar, 0, 0, 12, 4)
-        grid.attach(hostlabel, 0, 4, 4, 4)
-        grid.attach(userlabel, 0, 8, 4, 4)
+        grid.attach(profileslabel, 0, 4, 4, 4)
+        grid.attach(hostlabel, 0, 8, 4, 4)
+        grid.attach(userlabel, 0, 12, 4, 4)
         grid.attach(geometrylabel, 0, 16, 4, 4)
         grid.attach(programlabel, 0, 20, 4, 4)
+        grid.attach_next_to(profiles_combo, profileslabel,
+                            Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.hostentry, hostlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.userentry, userlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.geometryentry, geometrylabel,
                             Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(program_combo, programlabel,
+        grid.attach_next_to(self.program_combo, programlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach(homedirbutton, 0, 24, 4, 4)
-        grid.attach_next_to(grabkeyboardbutton, homedirbutton,
+        grid.attach(self.homedirbutton, 0, 24, 4, 4)
+        grid.attach_next_to(self.grabkeyboardbutton, self.homedirbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
-        grid.attach_next_to(fullscreenbutton, grabkeyboardbutton,
+        grid.attach_next_to(self.fullscreenbutton, self.grabkeyboardbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach(quitbutton, 0, 28, 4, 4)
         grid.attach_next_to(connectbutton, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
+
+        self.load_settings()
+        self.profilename = '' 
+
 
     # Triggered when the enter key is pressed on any text entry box
     def enter_callback(self, widget, entry):
@@ -289,6 +306,15 @@ class MainWindow(Gtk.Window):
     # Triggered when the connect button is clicked
     def on_connectbutton_clicked(self, widget):
         self.execute()
+
+    # Triggered when the combobox is clicked
+    def on_profiles_combo_changed(self, combo):
+        text = combo.get_active_text()
+        for profile in list_profiles(configfile):
+            if text == profile:
+                read_config(text, configfile)
+                self.load_settings()
+        self.profilename = text    
 
     # Triggered when the combobox is clicked
     def on_program_combo_changed(self, combo):
@@ -311,9 +337,14 @@ class MainWindow(Gtk.Window):
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
         action_group.add_action(action_filemenu)
+
+        # Why do the functions here execute on startup if we add parameters?
         action_group.add_actions([("SaveCurrentConfig", None,
-                                   "Save Current Configuration", None, None,
-                                   self.on_menu_file_save_config)])
+                                   "Save Current Profile", None, None,
+                                   self.on_menu_file_save_current_config)])
+        action_group.add_actions([("SaveAsDefault", None,
+                                   "Save Current as Default", None, None,
+                                   self.on_menu_file_save_default_config)])
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.on_menu_file_quit)
         action_group.add_action(action_filequit)
@@ -347,7 +378,10 @@ class MainWindow(Gtk.Window):
         return uimanager
 
     # When the save config button is clicked on the menu bar
-    def on_menu_file_save_config(self, widget):
+    def on_menu_file_save_current_config(self, widget):
+        save_config(self.profilename, self.configfile, self)
+
+    def on_menu_file_save_default_config(self, widget):
         save_config('defaults', self.configfile, self)
 
     # When the quit button is clicked on the menu bar
@@ -404,18 +438,32 @@ class MainWindow(Gtk.Window):
         about.run()
         about.destroy()
 
+    # Load all settings
+    def load_settings(self):
+        self.hostentry.set_text(options['host'])
+        self.userentry.set_text(options['user'])
+        self.geometryentry.set_text(options['geometry'])
+        self.program_combo.set_active(self.programs[options['program']])
+        if options['homeshare'] == 'true':
+                    self.homedirbutton.set_active(True)
+        if options['grabkeyboard'] == 'true':
+                    self.grabkeyboardbutton.set_active(True)
+        if options['fullscreen'] == 'true':
+                    self.fullscreenbutton.set_active(True)
+
 
 def _main():
-    # Path to config file
-    configfile = '%s/.rocket-depot' % os.environ['HOME']
     read_config('defaults', configfile)
+    save_config('defaults', configfile)
 
     # Make the GUI!
     window = MainWindow(configfile)
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
+
+    # Set focus to the host entry box on startup
+    window.hostentry.grab_focus()
     Gtk.main()
-    save_config('defaults', configfile)
 
 if __name__ == '__main__':
     _main()
