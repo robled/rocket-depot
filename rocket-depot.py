@@ -158,7 +158,6 @@ def run_program(window):
     if p.poll() != None:
         window.on_warn(0, 'Connection Error', '%s: \n' % client + 
                        p.communicate()[1])
-    return
 
 
 # Print the list of options currently selected for debugging
