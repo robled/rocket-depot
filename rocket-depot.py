@@ -90,12 +90,9 @@ def read_config(section, configfile):
         options['user'] = config.get(section, 'user')
         options['geometry'] = config.get(section, 'geometry')
         options['program'] = config.get(section, 'program')
-        if config.getboolean(section, 'homeshare'):
-            options['homeshare'] = config.get(section, 'homeshare')
-        if config.getboolean(section, 'grabkeyboard'):
-            options['grabkeyboard'] = config.get(section, 'grabkeyboard')
-        if config.getboolean(section, 'fullscreen'):
-            options['fullscreen'] = config.get(section, 'fullscreen')
+        options['homeshare'] = config.get(section, 'homeshare')
+        options['grabkeyboard'] = config.get(section, 'grabkeyboard')
+        options['fullscreen'] = config.get(section, 'fullscreen')
 
     return config
 
@@ -445,11 +442,17 @@ class MainWindow(Gtk.Window):
         self.geometryentry.set_text(options['geometry'])
         self.program_combo.set_active(self.programs[options['program']])
         if options['homeshare'] == 'true':
-                    self.homedirbutton.set_active(True)
+            self.homedirbutton.set_active(True)
+        else:
+            self.homedirbutton.set_active(False)
         if options['grabkeyboard'] == 'true':
-                    self.grabkeyboardbutton.set_active(True)
+            self.grabkeyboardbutton.set_active(True)
+        else:
+            self.grabkeyboardbutton.set_active(False)
         if options['fullscreen'] == 'true':
-                    self.fullscreenbutton.set_active(True)
+            self.fullscreenbutton.set_active(True)
+        else:
+            self.fullscreenbutton.set_active(False)
 
 
 def _main():
