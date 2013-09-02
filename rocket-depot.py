@@ -8,8 +8,10 @@ import ConfigParser
 from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
     
-# Path to our config file
+# Our config file
 configfile = '%s/.rocket-depot' % os.environ['HOME']
+config = ConfigParser.RawConfigParser()
+config.read(configfile)
 
 # Default options.  Overridden by config file.
 options = {
@@ -54,8 +56,6 @@ fullscreen = %(fullscreen)s
 
 # Write the config file
 def save_config(section, configfile, window=None):
-    config = ConfigParser.RawConfigParser()
-    config.read(configfile)
 
     if window:
         window.grab_textboxes()
@@ -81,9 +81,6 @@ def read_config(section, configfile):
     # Create the config file if it doesn't exist, otherwise read the existing
     # file
 
-    config = ConfigParser.RawConfigParser()
-    config.read(configfile)
-
     if os.path.exists(configfile):
         options['host'] = config.get(section, 'host')
         options['user'] = config.get(section, 'user')
@@ -96,8 +93,6 @@ def read_config(section, configfile):
     return config
 
 def list_profiles(configfile):
-    config = ConfigParser.RawConfigParser()
-    config.read(configfile)
     return config.sections()
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
@@ -177,7 +172,6 @@ def print_options():
 # GUI stuff
 class MainWindow(Gtk.Window):
     def __init__(self, configfile):
-        self.configfile = configfile
 
         # Window properties
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
@@ -374,7 +368,7 @@ class MainWindow(Gtk.Window):
         if self.profilename == '':
             self.on_warn(0, 'No Profile Name', 'Please name your profile before saving.')
         else:
-            save_config(self.profilename, self.configfile, self)
+            save_config(self.profilename, configfile, self)
 
     # When the quit button is clicked on the menu bar
     def on_menu_file_quit(self, widget):
