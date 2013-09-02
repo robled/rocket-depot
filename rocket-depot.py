@@ -56,7 +56,6 @@ fullscreen = %(fullscreen)s
 
 # Write the config file
 def save_config(section, configfile, window=None):
-
     if window:
         window.grab_textboxes()
 
@@ -89,8 +88,6 @@ def read_config(section, configfile):
         options['homeshare'] = config.get(section, 'homeshare')
         options['grabkeyboard'] = config.get(section, 'grabkeyboard')
         options['fullscreen'] = config.get(section, 'fullscreen')
-
-    return config
 
 def list_profiles(configfile):
     return config.sections()
