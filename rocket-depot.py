@@ -29,7 +29,6 @@ UI_INFO = """
   <menubar name='MenuBar'>
     <menu action='FileMenu'>
       <menuitem action='SaveCurrentConfig' />
-      <menuitem action='SaveAsDefault' />
       <menuitem action='FileQuit' />
     </menu>
     <menu action='OptionMenu'>
@@ -135,7 +134,7 @@ def run_program(window):
 
     # Throw an error if the required host field is empty
     if not options['host']:
-        window.on_warn('null', 'No Host', 'No Host or IP Address Given')
+        window.on_warn(0, 'No Host', 'No Host or IP Address Given')
         return
 
     # Add specified options to the parameter list
@@ -339,9 +338,6 @@ class MainWindow(Gtk.Window):
         action_group.add_actions([("SaveCurrentConfig", None,
                                    "Save Current Profile", None, None,
                                    self.on_menu_file_save_current_config)])
-        action_group.add_actions([("SaveAsDefault", None,
-                                   "Save Current as Default", None, None,
-                                   self.on_menu_file_save_default_config)])
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.on_menu_file_quit)
         action_group.add_action(action_filequit)
@@ -376,10 +372,10 @@ class MainWindow(Gtk.Window):
 
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_current_config(self, widget):
-        save_config(self.profilename, self.configfile, self)
-
-    def on_menu_file_save_default_config(self, widget):
-        save_config('defaults', self.configfile, self)
+        if self.profilename == '':
+            self.on_warn(0, 'No Profile Name', 'Please name your profile before saving.')
+        else:
+            save_config(self.profilename, self.configfile, self)
 
     # When the quit button is clicked on the menu bar
     def on_menu_file_quit(self, widget):
@@ -404,17 +400,6 @@ class MainWindow(Gtk.Window):
     def execute(self):
         self.grab_textboxes()
         run_program(self)
-
-    # Generic info dialog
-    def on_info(self, widget):
-        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
-                                   Gtk.ButtonsType.OK,
-                                   "This is an INFO MessageDialog",
-                                   title='rocket-depot')
-        dialog.format_secondary_text(
-            "And this is the secondary text that explains things.")
-        dialog.run()
-        dialog.destroy()
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
