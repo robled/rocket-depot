@@ -5,8 +5,7 @@ import string
 import subprocess
 import time
 import ConfigParser
-from gi.repository import Gtk, Gdk, GObject
-from gi.repository.GdkPixbuf import Pixbuf
+from gi.repository import Gtk
 
 # Our config file
 configfile = '%s/.rocket-depot' % os.environ['HOME']
@@ -382,7 +381,7 @@ class MainWindow(Gtk.Window):
                                    Gtk.ButtonsType.OK, title,
                                    title='Rocket Depot')
         dialog.format_secondary_text(message)
-        response = dialog.run()
+        dialog.run()
         dialog.destroy()
 
     # About dialog
