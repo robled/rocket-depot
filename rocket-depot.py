@@ -126,7 +126,7 @@ def run_program(window):
         params.append(x)
     # Throw an error if the required host field is empty
     if not options['host']:
-        window.on_warn(0, 'No Host', 'No Host or IP Address Given')
+        window.on_warn(None, 'No Host', 'No Host or IP Address Given')
         return
     # Add specified options to the parameter list
     if options['user'] != '':
@@ -151,7 +151,7 @@ def run_program(window):
     time.sleep(1)
     # If RDP client died, display stderr via popup
     if p.poll() != None:
-        window.on_warn(0, 'Connection Error', '%s: \n' % client +
+        window.on_warn(None, 'Connection Error', '%s: \n' % client +
                        p.communicate()[1])
 
 
@@ -351,7 +351,7 @@ class MainWindow(Gtk.Window):
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_current_config(self, widget):
         if self.profilename == '':
-            self.on_warn(0, 'No Profile Name',
+            self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
             save_config(self.profilename, configfile, self)
