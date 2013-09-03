@@ -85,8 +85,13 @@ def read_config(section, configfile):
         options['fullscreen'] = config.get(section, 'fullscreen')
 
 
+# Make a list of all profiles in config file.  Sort the order alphabetically,
+# except 'defaults' always comes first
 def list_profiles(configfile):
-    return config.sections()
+    profiles_list = sorted(config.sections())
+    defaults_index = profiles_list.index('defaults')
+    profiles_list.insert(0, profiles_list.pop(defaults_index))
+    return profiles_list
 
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
