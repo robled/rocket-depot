@@ -276,6 +276,26 @@ class MainWindow(Gtk.Window):
         self.load_settings()
         self.profilename = 'defaults'
 
+        # Create Unity launcher quicklist
+        try:
+            from gi.repository import Unity, Dbusmenu
+            um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
+            quicklist = Dbusmenu.Menuitem.new()
+            for profile in list_profiles(configfile):
+                profile_menu_item = Dbusmenu.Menuitem.new()
+                profile_menu_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, profile)
+                profile_menu_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, True)
+                profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
+                quicklist.child_append(profile_menu_item)
+            um_launcher_entry.set_property ("quicklist", quicklist)
+        except ImportError:
+            pass
+
+    # Triggered when the connect button is clicked
+    def on_unity_clicked(self, widget, entry, profile):
+        read_config(profile, configfile)
+        self.unity_execute()
+
     # Triggered when the enter key is pressed on any text entry box
     def enter_callback(self, widget, entry):
         self.execute()
@@ -380,6 +400,9 @@ class MainWindow(Gtk.Window):
         self.grab_textboxes()
         run_program(self)
 
+    def unity_execute(self):
+        run_program(self)
+
     # Generic warning dialog
     def on_warn(self, widget, title, message):
         dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
@@ -429,6 +452,7 @@ def _main():
     # Set focus to the host entry box on startup
     window.hostentry.grab_focus()
     Gtk.main()
+
 
 if __name__ == '__main__':
     _main()
