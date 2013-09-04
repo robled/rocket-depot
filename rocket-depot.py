@@ -199,11 +199,11 @@ class MainWindow(Gtk.Window):
         programlabel = Gtk.Label("RDP Client")
 
         # Adding our list of profiles to the combobox.
-        profiles_combo = Gtk.ComboBoxText.new_with_entry()
+        self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
         for profile in list_profiles(configfile):
-            profiles_combo.append_text(profile)
-        profiles_combo.set_active(0)
-        profiles_combo.connect("changed", self.on_profiles_combo_changed)
+            self.profiles_combo.append_text(profile)
+        self.profiles_combo.set_active(0)
+        self.profiles_combo.connect("changed", self.on_profiles_combo_changed)
 
         # Text entry fields
         self.hostentry = Gtk.Entry()
@@ -259,7 +259,7 @@ class MainWindow(Gtk.Window):
         grid.attach(userlabel, 0, 12, 4, 4)
         grid.attach(geometrylabel, 0, 16, 4, 4)
         grid.attach(programlabel, 0, 20, 4, 4)
-        grid.attach_next_to(profiles_combo, profileslabel,
+        grid.attach_next_to(self.profiles_combo, profileslabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.hostentry, hostlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
@@ -284,6 +284,9 @@ class MainWindow(Gtk.Window):
         # Set up Unity quicklist
         if unity == True:
             self.create_unity_quicklist()
+
+    def update_profiles_combobox(self, profile):
+        self.profiles_combo.append_text(profile)
 
     def create_unity_quicklist(self):
         um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
@@ -383,6 +386,7 @@ class MainWindow(Gtk.Window):
                          'Please name your profile before saving.')
         else:
             save_config(self.profilename, configfile, self)
+            self.update_profiles_combobox(self.profilename)
             if unity == True:
                 self.update_unity_quicklist(self.profilename)
 
