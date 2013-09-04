@@ -296,11 +296,12 @@ class MainWindow(Gtk.Window):
         um_launcher_entry.set_property ("quicklist", self.quicklist)
 
     def update_unity_quicklist(self, profile):
-        profile_menu_item = Dbusmenu.Menuitem.new()
-        profile_menu_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, profile)
-        profile_menu_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, True)
-        profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
-        self.quicklist.child_append(profile_menu_item)
+        if profile != 'defaults':
+            profile_menu_item = Dbusmenu.Menuitem.new()
+            profile_menu_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, profile)
+            profile_menu_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, True)
+            profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
+            self.quicklist.child_append(profile_menu_item)
 
     # Triggered when the connect button is clicked
     def on_unity_clicked(self, widget, entry, profile):
