@@ -7,6 +7,12 @@ import time
 import ConfigParser
 from gi.repository import Gtk
 
+try:
+    from gi.repository import Unity, Dbusmenu
+    unity = True
+except ImportError:
+    unity = False
+
 # Our config file
 configfile = '%s/.rocket-depot' % os.environ['HOME']
 config = ConfigParser.RawConfigParser()
@@ -276,22 +282,22 @@ class MainWindow(Gtk.Window):
         self.load_settings()
         self.profilename = 'defaults'
         # Set up Unity quicklist
-        self.create_unity_quicklist()
+        if unity == True:
+            self.create_unity_quicklist()
 
     def create_unity_quicklist(self):
-        try:
-            from gi.repository import Unity, Dbusmenu
-            um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
-            quicklist = Dbusmenu.Menuitem.new()
-            for profile in list_profiles(configfile):
-                profile_menu_item = Dbusmenu.Menuitem.new()
-                profile_menu_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, profile)
-                profile_menu_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, True)
-                profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
-                quicklist.child_append(profile_menu_item)
-            um_launcher_entry.set_property ("quicklist", quicklist)
-        except ImportError:
-            pass
+        um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
+        self.quicklist = Dbusmenu.Menuitem.new()
+        for profile in list_profiles(configfile):
+            self.update_unity_quicklist(profile)
+        um_launcher_entry.set_property ("quicklist", self.quicklist)
+
+    def update_unity_quicklist(self, profile):
+        profile_menu_item = Dbusmenu.Menuitem.new()
+        profile_menu_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, profile)
+        profile_menu_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, True)
+        profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
+        self.quicklist.child_append(profile_menu_item)
 
     # Triggered when the connect button is clicked
     def on_unity_clicked(self, widget, entry, profile):
@@ -377,6 +383,8 @@ class MainWindow(Gtk.Window):
                          'Please name your profile before saving.')
         else:
             save_config(self.profilename, configfile, self)
+            if unity == True:
+                self.update_unity_quicklist(self.profilename)
 
     # When the quit button is clicked on the menu bar
     def on_menu_file_quit(self, widget):
