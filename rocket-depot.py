@@ -36,6 +36,7 @@ UI_INFO = """
   <menubar name='MenuBar'>
     <menu action='FileMenu'>
       <menuitem action='SaveCurrentConfig' />
+      <menuitem action='SaveCurrentConfigAsDefault' />
       <menuitem action='FileQuit' />
     </menu>
     <menu action='OptionMenu'>
@@ -201,8 +202,8 @@ class MainWindow(Gtk.Window):
         # Adding our list of profiles to the combobox.
         self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
         for profile in list_profiles(configfile):
-            self.profiles_combo.append_text(profile)
-        self.profiles_combo.set_active(0)
+            if profile != 'defaults':
+                self.profiles_combo.append_text(profile)
         self.profiles_combo.connect("changed", self.on_profiles_combo_changed)
 
         # Text entry fields
@@ -350,6 +351,9 @@ class MainWindow(Gtk.Window):
         action_group.add_actions([("SaveCurrentConfig", None,
                                    "Save Current Profile", None, None,
                                    self.on_menu_file_save_current_config)])
+        action_group.add_actions([("SaveCurrentConfigAsDefault", None,
+                                   "Save Current Profile as Default", None, None,
+                                   self.on_menu_file_save_current_config_as_default)])
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.on_menu_file_quit)
         action_group.add_action(action_filequit)
@@ -390,6 +394,10 @@ class MainWindow(Gtk.Window):
             self.update_profiles_combobox(self.profilename)
             if unity == True:
                 self.update_unity_quicklist(self.profilename)
+
+    # When the save config button is clicked on the menu bar
+    def on_menu_file_save_current_config_as_default(self, widget):
+        save_config('defaults', configfile, self)
 
     # When the quit button is clicked on the menu bar
     def on_menu_file_quit(self, widget):
