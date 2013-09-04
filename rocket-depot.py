@@ -275,8 +275,10 @@ class MainWindow(Gtk.Window):
         # Define initial profile data
         self.load_settings()
         self.profilename = 'defaults'
+        # Set up Unity quicklist
+        self.create_unity_quicklist()
 
-        # Create Unity launcher quicklist
+    def create_unity_quicklist(self):
         try:
             from gi.repository import Unity, Dbusmenu
             um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
