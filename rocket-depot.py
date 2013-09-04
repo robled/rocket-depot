@@ -386,10 +386,11 @@ class MainWindow(Gtk.Window):
 
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_current_config(self, widget):
-        if self.profilename == '':
+        if self.profilename == '' or self.profilename == 'defaults':
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
+            print 'saving' + self.profilename
             save_config(self.profilename, configfile, self)
             self.update_profiles_combobox(self.profilename)
             if unity == True:
