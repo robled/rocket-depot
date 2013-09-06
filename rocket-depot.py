@@ -298,11 +298,11 @@ class MainWindow(Gtk.Window):
                 self.profiles_combo.append_text(profile)
 
     def create_unity_quicklist(self):
-        um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
+        self.um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
         self.quicklist = Dbusmenu.Menuitem.new()
         for profile in list_profiles(configfile):
             self.update_unity_quicklist(profile)
-        um_launcher_entry.set_property ("quicklist", self.quicklist)
+        self.um_launcher_entry.set_property ("quicklist", self.quicklist)
 
     def update_unity_quicklist(self, profile):
         if profile != 'defaults':
@@ -311,6 +311,12 @@ class MainWindow(Gtk.Window):
             profile_menu_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, True)
             profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
             self.quicklist.child_append(profile_menu_item)
+
+    def clean_unity_quicklist(self, profile):
+        for x in self.quicklist.get_children():
+            self.quicklist.child_delete(x)
+        for profile in list_profiles(configfile):
+            self.update_unity_quicklist(profile)
 
     # Triggered when the connect button is clicked
     def on_unity_clicked(self, widget, entry, profile):
@@ -412,6 +418,7 @@ class MainWindow(Gtk.Window):
             self.on_warn(None, 'Select a Profile',
                          'Please select a profile to delete.')
         else:
+            profile = self.profilename
             delete_config(self.profilename, configfile)
             read_config('defaults', configfile)
             self.load_settings()
@@ -421,8 +428,8 @@ class MainWindow(Gtk.Window):
             active = self.profiles_combo.get_active()
             self.profiles_combo.remove(active)
             self.populate_profiles_combobox()
-            #if unity == True:
-            #    self.update_unity_quicklist(self.profilename)
+            if unity == True:
+                self.clean_unity_quicklist(profile)
 
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_current_config_as_default(self, widget):
