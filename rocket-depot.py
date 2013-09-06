@@ -37,6 +37,7 @@ UI_INFO = """
     <menu action='FileMenu'>
       <menuitem action='SaveCurrentConfig' />
       <menuitem action='SaveCurrentConfigAsDefault' />
+      <menuitem action='DeleteCurrentConfig' />
       <menuitem action='FileQuit' />
     </menu>
     <menu action='OptionMenu'>
@@ -76,6 +77,12 @@ def save_config(section, configfile, window=None):
     config.set(section, 'grabkeyboard', options['grabkeyboard'])
     config.set(section, 'fullscreen', options['fullscreen'])
     # Writing our configuration file
+    with open(configfile, 'wb') as f:
+        config.write(f)
+
+
+def delete_config(section, configfile):
+    config.remove_section(section)
     with open(configfile, 'wb') as f:
         config.write(f)
 
@@ -201,9 +208,7 @@ class MainWindow(Gtk.Window):
 
         # Adding our list of profiles to the combobox.
         self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
-        for profile in list_profiles(configfile):
-            if profile != 'defaults':
-                self.profiles_combo.append_text(profile)
+        self.populate_profiles_combobox()
         self.profiles_combo.connect("changed", self.on_profiles_combo_changed)
 
         # Text entry fields
@@ -286,8 +291,11 @@ class MainWindow(Gtk.Window):
         if unity == True:
             self.create_unity_quicklist()
 
-    def update_profiles_combobox(self, profile):
-        self.profiles_combo.append_text(profile)
+    def populate_profiles_combobox(self):
+        self.profiles_combo.get_model().clear()
+        for profile in list_profiles(configfile):
+            if profile != 'defaults':
+                self.profiles_combo.append_text(profile)
 
     def create_unity_quicklist(self):
         um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
@@ -354,6 +362,9 @@ class MainWindow(Gtk.Window):
         action_group.add_actions([("SaveCurrentConfigAsDefault", None,
                                    "Save Current Profile as Default", None, None,
                                    self.on_menu_file_save_current_config_as_default)])
+        action_group.add_actions([("DeleteCurrentConfig", None,
+                                   "Delete Current Profile", None, None,
+                                   self.on_menu_file_delete_current_config)])
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.on_menu_file_quit)
         action_group.add_action(action_filequit)
@@ -390,11 +401,28 @@ class MainWindow(Gtk.Window):
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
-            print 'saving' + self.profilename
             save_config(self.profilename, configfile, self)
-            self.update_profiles_combobox(self.profilename)
+            self.populate_profiles_combobox()
             if unity == True:
                 self.update_unity_quicklist(self.profilename)
+
+    # When the delete config button is clicked on the menu bar
+    def on_menu_file_delete_current_config(self, widget):
+        if self.profilename == '' or self.profilename == 'defaults':
+            self.on_warn(None, 'Select a Profile',
+                         'Please select a profile to delete.')
+        else:
+            delete_config(self.profilename, configfile)
+            read_config('defaults', configfile)
+            self.load_settings()
+            self.profiles_combo.set_active(-1)
+            self.profiles_combo.prepend_text('')
+            self.profiles_combo.set_active(0)
+            active = self.profiles_combo.get_active()
+            self.profiles_combo.remove(active)
+            self.populate_profiles_combobox()
+            #if unity == True:
+            #    self.update_unity_quicklist(self.profilename)
 
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_current_config_as_default(self, widget):
