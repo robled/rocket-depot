@@ -62,6 +62,9 @@ grabkeyboard = %(grabkeyboard)s
 fullscreen = %(fullscreen)s
 '''
 
+def write_config():
+    with open(configfile, 'wb') as f:
+        config.write(f)
 
 # Write the config file
 def save_config(section, configfile, window=None):
@@ -78,15 +81,12 @@ def save_config(section, configfile, window=None):
     config.set(section, 'homeshare', options['homeshare'])
     config.set(section, 'grabkeyboard', options['grabkeyboard'])
     config.set(section, 'fullscreen', options['fullscreen'])
-    # Writing our configuration file
-    with open(configfile, 'wb') as f:
-        config.write(f)
+    write_config()
 
 
 def delete_config(section, configfile):
     config.remove_section(section)
-    with open(configfile, 'wb') as f:
-        config.write(f)
+    write_config()
 
 
 # Set options based on config file
