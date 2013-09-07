@@ -181,7 +181,6 @@ class MainWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(8)
-        progicon = Gtk.IconTheme.get_default().load_icon('gnome-fs-web', 64, 0)
         self.set_icon(progicon)
         self.set_wmclass('rocket-depot', 'rocket-depot')
 
