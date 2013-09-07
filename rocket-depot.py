@@ -7,10 +7,12 @@ import time
 import ConfigParser
 from gi.repository import Gtk
 
-try:
+de = os.environ.get('DESKTOP_SESSION')
+
+if de == 'ubuntu' or de == 'ubuntu-2d':
     from gi.repository import Unity, Dbusmenu
     unity = True
-except ImportError:
+else:
     unity = False
 
 # Our config file
@@ -181,7 +183,6 @@ class MainWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(8)
-        self.set_icon(progicon)
         self.set_wmclass('rocket-depot', 'rocket-depot')
 
         # Menu bar
