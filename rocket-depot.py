@@ -297,11 +297,14 @@ class MainWindow(Gtk.Window):
             if profile != 'defaults':
                 self.profiles_combo.append_text(profile)
 
+    def populate_unity_quicklist(self):
+        for profile in list_profiles(configfile):
+            self.update_unity_quicklist(profile)
+
     def create_unity_quicklist(self):
         self.um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
         self.quicklist = Dbusmenu.Menuitem.new()
-        for profile in list_profiles(configfile):
-            self.update_unity_quicklist(profile)
+        self.populate_unity_quicklist()
         self.um_launcher_entry.set_property ("quicklist", self.quicklist)
 
     def update_unity_quicklist(self, profile):
@@ -315,8 +318,7 @@ class MainWindow(Gtk.Window):
     def clean_unity_quicklist(self, profile):
         for x in self.quicklist.get_children():
             self.quicklist.child_delete(x)
-        for profile in list_profiles(configfile):
-            self.update_unity_quicklist(profile)
+        self.populate_unity_quicklist()
 
     # Triggered when the connect button is clicked
     def on_unity_clicked(self, widget, entry, profile):
