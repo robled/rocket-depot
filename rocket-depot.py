@@ -213,12 +213,12 @@ class MainWindow(Gtk.Window):
 
         # Text entry fields
         self.hostentry = Gtk.Entry()
-        self.hostentry.connect("activate", self.enter_callback, self.hostentry)
+        self.hostentry.connect("activate", self.enter_connect, self.hostentry)
         self.userentry = Gtk.Entry()
-        self.userentry.connect("activate", self.enter_callback, self.userentry)
+        self.userentry.connect("activate", self.enter_connect, self.userentry)
         self.geometryentry = Gtk.Entry()
         self.geometryentry.connect("activate",
-                                   self.enter_callback, self.geometryentry)
+                                   self.enter_connect, self.geometryentry)
 
         # Combobox for program selection
         program_store = Gtk.ListStore(str)
@@ -256,7 +256,7 @@ class MainWindow(Gtk.Window):
 
         # Connect button
         connectbutton = Gtk.Button(label="Connect")
-        connectbutton.connect("clicked", self.on_connectbutton_clicked)
+        connectbutton.connect("clicked", self.enter_connect)
 
         # Grid to which we attach all of our widgets
         grid.attach(menubar, 0, 0, 12, 4)
@@ -323,15 +323,11 @@ class MainWindow(Gtk.Window):
     # Triggered when the connect button is clicked
     def on_unity_clicked(self, widget, entry, profile):
         read_config(profile, configfile)
-        self.unity_execute()
+        run_program(self)
 
-    # Triggered when the enter key is pressed on any text entry box
-    def enter_callback(self, widget, entry):
-        self.execute()
-
-    # Triggered when the connect button is clicked
-    def on_connectbutton_clicked(self, widget):
-        self.execute()
+    def enter_connect(self, *args):
+        self.grab_textboxes()
+        run_program(self)
 
     # Triggered when the combobox is clicked
     def on_profiles_combo_changed(self, combo):
@@ -455,14 +451,6 @@ class MainWindow(Gtk.Window):
     def on_menu_debug(self, widget):
         self.grab_textboxes()
         print_options()
-
-    # Run our command line RDP client
-    def execute(self):
-        self.grab_textboxes()
-        run_program(self)
-
-    def unity_execute(self):
-        run_program(self)
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
