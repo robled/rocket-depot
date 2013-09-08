@@ -254,7 +254,7 @@ class MainWindow(Gtk.Window):
 
         # Quit button
         quitbutton = Gtk.Button(label="Quit")
-        quitbutton.connect("clicked", self.on_menu_file_quit)
+        quitbutton.connect("clicked", self.quit)
 
         # Connect button
         connectbutton = Gtk.Button(label="Connect")
@@ -375,9 +375,9 @@ class MainWindow(Gtk.Window):
                                    None, self.save_current_config_as_default)])
         action_group.add_actions([("DeleteCurrentConfig", None,
                                    "Delete Current Profile", None, None,
-                                   self.on_menu_file_delete_current_config)])
+                                   self.delete_current_config)])
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
-        action_filequit.connect("activate", self.on_menu_file_quit)
+        action_filequit.connect("activate", self.quit)
         action_group.add_action(action_filequit)
 
     # Triggered when the options menu is used
@@ -418,7 +418,7 @@ class MainWindow(Gtk.Window):
                 self.update_unity_quicklist(self.profilename)
 
     # When the delete config button is clicked on the menu bar
-    def on_menu_file_delete_current_config(self, widget):
+    def delete_current_config(self, widget):
         if self.profilename == '' or self.profilename == 'defaults':
             self.on_warn(None, 'Select a Profile',
                          'Please select a profile to delete.')
@@ -440,7 +440,7 @@ class MainWindow(Gtk.Window):
         save_config('defaults', self)
 
     # When the quit button is clicked on the menu bar
-    def on_menu_file_quit(self, widget):
+    def quit(self, widget):
         Gtk.main_quit()
 
     # When the help button is clicked on the menu bar
