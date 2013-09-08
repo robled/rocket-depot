@@ -67,7 +67,7 @@ def write_config():
         config.write(f)
 
 # Write the config file
-def save_config(section, configfile, window=None):
+def save_config(section, window=None):
     # if the UI is running, let's see what's in the textboxes
     if window:
         window.grab_textboxes()
@@ -84,13 +84,13 @@ def save_config(section, configfile, window=None):
     write_config()
 
 
-def delete_config(section, configfile):
+def delete_config(section):
     config.remove_section(section)
     write_config()
 
 
 # Set options based on config file
-def read_config(section, configfile):
+def read_config(section):
     if os.path.exists(configfile):
         options['host'] = config.get(section, 'host')
         options['user'] = config.get(section, 'user')
@@ -103,7 +103,7 @@ def read_config(section, configfile):
 
 # Make a list of all profiles in config file.  Sort the order alphabetically,
 # except 'defaults' always comes first
-def list_profiles(configfile):
+def list_profiles():
     profiles_list = sorted(config.sections())
     defaults_index = profiles_list.index('defaults')
     profiles_list.insert(0, profiles_list.pop(defaults_index))
@@ -178,7 +178,7 @@ def print_options():
 
 # GUI stuff
 class MainWindow(Gtk.Window):
-    def __init__(self, configfile):
+    def __init__(self):
         # Window properties
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -293,12 +293,12 @@ class MainWindow(Gtk.Window):
 
     def populate_profiles_combobox(self):
         self.profiles_combo.get_model().clear()
-        for profile in list_profiles(configfile):
+        for profile in list_profiles():
             if profile != 'defaults':
                 self.profiles_combo.append_text(profile)
 
     def populate_unity_quicklist(self):
-        for profile in list_profiles(configfile):
+        for profile in list_profiles():
             self.update_unity_quicklist(profile)
 
     def create_unity_quicklist(self):
@@ -315,14 +315,14 @@ class MainWindow(Gtk.Window):
             profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
             self.quicklist.child_append(profile_menu_item)
 
-    def clean_unity_quicklist(self, profile):
+    def clean_unity_quicklist(self):
         for x in self.quicklist.get_children():
             self.quicklist.child_delete(x)
         self.populate_unity_quicklist()
 
     # Triggered when the connect button is clicked
     def on_unity_clicked(self, widget, entry, profile):
-        read_config(profile, configfile)
+        read_config(profile)
         run_program(self)
 
     def enter_connect(self, *args):
@@ -332,9 +332,9 @@ class MainWindow(Gtk.Window):
     # Triggered when the combobox is clicked
     def on_profiles_combo_changed(self, combo):
         text = combo.get_active_text()
-        for profile in list_profiles(configfile):
+        for profile in list_profiles():
             if text == profile:
-                read_config(text, configfile)
+                read_config(text)
                 self.load_settings()
         self.profilename = text
 
@@ -405,7 +405,7 @@ class MainWindow(Gtk.Window):
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
-            save_config(self.profilename, configfile, self)
+            save_config(self.profilename, self)
             self.populate_profiles_combobox()
             if unity == True:
                 self.update_unity_quicklist(self.profilename)
@@ -417,8 +417,8 @@ class MainWindow(Gtk.Window):
                          'Please select a profile to delete.')
         else:
             profile = self.profilename
-            delete_config(self.profilename, configfile)
-            read_config('defaults', configfile)
+            delete_config(self.profilename)
+            read_config('defaults')
             self.load_settings()
             self.profiles_combo.set_active(-1)
             self.profiles_combo.prepend_text('')
@@ -427,11 +427,11 @@ class MainWindow(Gtk.Window):
             self.profiles_combo.remove(active)
             self.populate_profiles_combobox()
             if unity == True:
-                self.clean_unity_quicklist(profile)
+                self.clean_unity_quicklist()
 
     # When the save config button is clicked on the menu bar
     def on_menu_file_save_current_config_as_default(self, widget):
-        save_config('defaults', configfile, self)
+        save_config('defaults', self)
 
     # When the quit button is clicked on the menu bar
     def on_menu_file_quit(self, widget):
@@ -492,10 +492,10 @@ class MainWindow(Gtk.Window):
 
 
 def _main():
-    read_config('defaults', configfile)
-    save_config('defaults', configfile)
+    read_config('defaults')
+    save_config('defaults')
     # Make the GUI!
-    window = MainWindow(configfile)
+    window = MainWindow()
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
     # Set focus to the host entry box on startup
