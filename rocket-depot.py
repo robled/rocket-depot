@@ -416,7 +416,6 @@ class MainWindow(Gtk.Window):
             self.on_warn(None, 'Select a Profile',
                          'Please select a profile to delete.')
         else:
-            profile = self.profilename
             delete_config(self.profilename)
             read_config('defaults')
             self.load_settings()
