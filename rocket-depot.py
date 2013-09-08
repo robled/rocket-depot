@@ -62,9 +62,11 @@ grabkeyboard = %(grabkeyboard)s
 fullscreen = %(fullscreen)s
 '''
 
+
 def write_config():
     with open(configfile, 'wb') as f:
         config.write(f)
+
 
 # Write the config file
 def save_config(section, window=None):
@@ -302,17 +304,22 @@ class MainWindow(Gtk.Window):
             self.update_unity_quicklist(profile)
 
     def create_unity_quicklist(self):
-        self.um_launcher_entry = Unity.LauncherEntry.get_for_desktop_id ("rocket-depot.desktop")
+        self.um_launcher_entry = \
+                                 Unity.LauncherEntry.get_for_desktop_id(
+                                 "rocket-depot.desktop")
         self.quicklist = Dbusmenu.Menuitem.new()
         self.populate_unity_quicklist()
-        self.um_launcher_entry.set_property ("quicklist", self.quicklist)
+        self.um_launcher_entry.set_property("quicklist", self.quicklist)
 
     def update_unity_quicklist(self, profile):
         if profile != 'defaults':
             profile_menu_item = Dbusmenu.Menuitem.new()
-            profile_menu_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, profile)
-            profile_menu_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, True)
-            profile_menu_item.connect ("item-activated", self.on_unity_clicked, profile)
+            profile_menu_item.property_set(Dbusmenu.MENUITEM_PROP_LABEL,
+                                           profile)
+            profile_menu_item.property_set_bool(Dbusmenu.MENUITEM_PROP_VISIBLE,
+                                                True)
+            profile_menu_item.connect("item-activated", self.on_unity_clicked,
+                                      profile)
             self.quicklist.child_append(profile_menu_item)
 
     def clean_unity_quicklist(self):
@@ -364,7 +371,8 @@ class MainWindow(Gtk.Window):
                                    "Save Current Profile", None, None,
                                    self.on_menu_file_save_current_config)])
         action_group.add_actions([("SaveCurrentConfigAsDefault", None,
-                                   "Save Current Profile as Default", None, None,
+                                   "Save Current Profile as Default", None,
+                                   None,
                                    self.on_menu_file_save_current_config_as_default)])
         action_group.add_actions([("DeleteCurrentConfig", None,
                                    "Delete Current Profile", None, None,
