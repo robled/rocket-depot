@@ -369,11 +369,10 @@ class MainWindow(Gtk.Window):
         # Why do the functions here execute on startup if we add parameters?
         action_group.add_actions([("SaveCurrentConfig", None,
                                    "Save Current Profile", None, None,
-                                   self.on_menu_file_save_current_config)])
+                                   self.save_current_config)])
         action_group.add_actions([("SaveCurrentConfigAsDefault", None,
                                    "Save Current Profile as Default", None,
-                                   None,
-                                   self.on_menu_file_save_current_config_as_default)])
+                                   None, self.save_current_config_as_default)])
         action_group.add_actions([("DeleteCurrentConfig", None,
                                    "Delete Current Profile", None, None,
                                    self.on_menu_file_delete_current_config)])
@@ -408,7 +407,7 @@ class MainWindow(Gtk.Window):
         return uimanager
 
     # When the save config button is clicked on the menu bar
-    def on_menu_file_save_current_config(self, widget):
+    def save_current_config(self, widget):
         if self.profilename == '' or self.profilename == 'defaults':
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
@@ -437,7 +436,7 @@ class MainWindow(Gtk.Window):
                 self.clean_unity_quicklist()
 
     # When the save config button is clicked on the menu bar
-    def on_menu_file_save_current_config_as_default(self, widget):
+    def save_current_config_as_default(self, widget):
         save_config('defaults', self)
 
     # When the quit button is clicked on the menu bar
