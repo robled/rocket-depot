@@ -43,25 +43,12 @@ UI_INFO = """
       <menuitem action='DeleteCurrentConfig' />
       <menuitem action='FileQuit' />
     </menu>
-    <menu action='OptionMenu'>
-      <menuitem action='PrintDebug' />
-    </menu>
     <menu action='Help'>
       <menuitem action='About'/>
     </menu>
   </menubar>
 </ui>
 """
-
-OPTIONS_TEMPLATE = '''Currently selected options:
-host = %(host)s
-user = %(user)s
-geometry = %(geometry)s
-program = %(program)s
-homeshare = %(homeshare)s
-grabkeyboard = %(grabkeyboard)s
-fullscreen = %(fullscreen)s
-'''
 
 
 def write_config():
@@ -178,11 +165,6 @@ def run_program(window):
                        p.communicate()[1])
 
 
-# Print the list of options currently selected for debugging
-def print_options():
-    print OPTIONS_TEMPLATE % options
-
-
 # GUI stuff
 class MainWindow(Gtk.Window):
     def __init__(self):
@@ -195,7 +177,6 @@ class MainWindow(Gtk.Window):
         # Menu bar
         action_group = Gtk.ActionGroup("Menu")
         self.add_file_menu_actions(action_group)
-        self.add_options_menu_actions(action_group)
         self.add_help_menu_actions(action_group)
         uimanager = self.create_ui_manager()
         uimanager.insert_action_group(action_group)
@@ -398,14 +379,6 @@ class MainWindow(Gtk.Window):
         action_filequit.connect("activate", self.quit)
         action_group.add_action(action_filequit)
 
-    # Triggered when the options menu is used
-    def add_options_menu_actions(self, action_group):
-        action_group.add_actions([
-            ("OptionMenu", None, "Options"),
-            ("PrintDebug", None, "Print Debugging to Terminal", None, None,
-             self.on_menu_debug),
-        ])
-
     # Triggered when the help menu is used
     def add_help_menu_actions(self, action_group):
         action_group.add_actions([
@@ -470,11 +443,6 @@ class MainWindow(Gtk.Window):
         options['host'] = self.hostentry.get_text()
         options['user'] = self.userentry.get_text()
         options['geometry'] = self.geometryentry.get_text()
-
-    # When the debug button is clicked on the menu bar
-    def on_menu_debug(self, widget):
-        self.grab_textboxes()
-        print_options()
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
