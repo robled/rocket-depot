@@ -8,15 +8,15 @@ import time
 import ConfigParser
 from gi.repository import Gtk
 
+# Enable special features if we're running Ubuntu Unity
 de = os.environ.get('DESKTOP_SESSION')
-
 if de == 'ubuntu' or de == 'ubuntu-2d':
     from gi.repository import Unity, Dbusmenu
     unity = True
 else:
     unity = False
 
-# Our config file
+# Our config dotfile
 configfile = '%s/.rocket-depot' % os.environ['HOME']
 config = ConfigParser.RawConfigParser()
 config.read(configfile)
@@ -51,12 +51,13 @@ UI_INFO = """
 """
 
 
+# Open the config file for writing
 def write_config():
     with open(configfile, 'wb') as f:
         config.write(f)
 
 
-# Write the config file
+# Save options to the config file
 def save_config(section, window=None):
     # if the UI is running, let's see what's in the textboxes
     if window:
@@ -64,6 +65,7 @@ def save_config(section, window=None):
     # add the new section if it doesn't exist
     if not config.has_section(section):
         config.add_section(section)
+    # Set all selected options
     config.set(section, 'host', options['host'])
     config.set(section, 'user', options['user'])
     config.set(section, 'geometry', options['geometry'])
@@ -74,12 +76,13 @@ def save_config(section, window=None):
     write_config()
 
 
+# Delete a section from the config file
 def delete_config(section):
     config.remove_section(section)
     write_config()
 
 
-# Set options based on config file
+# Set options based on section in config file
 def read_config(section):
     if os.path.exists(configfile):
         options['host'] = config.get(section, 'host')
@@ -92,7 +95,7 @@ def read_config(section):
 
 
 # Make a list of all profiles in config file.  Sort the order alphabetically,
-# except 'defaults' always comes first
+# except special 'defaults' profile always comes first
 def list_profiles():
     profiles_list = sorted(config.sections())
     defaults_index = profiles_list.index('defaults')
@@ -102,6 +105,7 @@ def list_profiles():
 
 # Run the selected RDP client - currently rdesktop or xfreerdp
 def run_program(window):
+    # CLI parameters for each RDP client we support.  stdopts are always used.
     client_opts = {
         'rdesktop': {
             'stdopts': ['rdesktop', '-ken-us', '-a16'],
@@ -138,6 +142,9 @@ def run_program(window):
     if options['user'] != '':
         params.append(client_opts[client]['user']
                       + '%s' % string.strip(options['user']))
+    # Detect percent symbol in geometry field.  If it exists we do math to
+    # use the correct resolution for the active monitor.  Otherwise we submit
+    # a given resolution such as 1024x768 to the list of parameters.
     if options['geometry'] != '':
         if options['geometry'].find('%') == -1:
             params.append(client_opts[client]['geometry']
@@ -151,6 +158,7 @@ def run_program(window):
         params.append(client_opts[client]['grabkeyboard'])
     if options['homeshare'] == 'true':
         params.append(client_opts[client]['homeshare'])
+    # Hostname goes last in the list or parameters
     params.append(client_opts[client]['host']
                   + '%s' % string.strip(options['host']))
     # Print the command line that we constructed to the terminal
@@ -159,7 +167,7 @@ def run_program(window):
     p = subprocess.Popen(params, stderr=subprocess.PIPE)
     # Wait for DNS resolution or connection failures
     time.sleep(1)
-    # If RDP client died, display stderr via popup
+    # If RDP client died, display stderr from RDP client via popup
     if p.poll() is not None:
         window.on_warn(None, 'Connection Error', '%s: \n' % client +
                        p.communicate()[1])
@@ -272,14 +280,16 @@ class MainWindow(Gtk.Window):
         grid.attach_next_to(connectbutton, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
-        # Define initial profile data
+        # Load the default profile on startup
         self.load_settings()
         self.profilename = 'defaults'
-        # Set up Unity quicklist
+        # Set up Unity quicklist if we can support that
         if unity is True:
             self.create_unity_quicklist()
 
+    # If a geometry percentage is given, let's figure out the actual resolution
     def geo_percent(self, geometry):
+        # Remove the percent symbol from our value
         cleangeo = int(re.sub('[^0-9]', '', geometry))
         # Get the screen from the GtkWindow
         screen = self.get_screen()
@@ -287,21 +297,27 @@ class MainWindow(Gtk.Window):
         monitor = screen.get_monitor_at_window(screen.get_active_window())
         # Then get the geometry of that monitor
         mongeometry = screen.get_monitor_geometry(monitor)
+        # Move our geometry percent decimal place two to the left so that we
+        # can multiply
         cleangeo /= 100.
+        # Multiply current width and height to find requested width and height
         width = int(round(cleangeo * mongeometry.width))
         height = int(round(cleangeo * mongeometry.height))
         return "%sx%s" % (width, height)
 
+    # Each section in the config file gets an entry in the profiles combobox
     def populate_profiles_combobox(self):
         self.profiles_combo.get_model().clear()
         for profile in list_profiles():
             if profile != 'defaults':
                 self.profiles_combo.append_text(profile)
 
+    # Each section in the config file gets an entry in the Unity quicklist
     def populate_unity_quicklist(self):
         for profile in list_profiles():
             self.update_unity_quicklist(profile)
 
+    # Create the Unity quicklist and populate it with our profiles
     def create_unity_quicklist(self):
         self.um_launcher_entry = \
                                  Unity.LauncherEntry.get_for_desktop_id(
@@ -310,6 +326,7 @@ class MainWindow(Gtk.Window):
         self.populate_unity_quicklist()
         self.um_launcher_entry.set_property("quicklist", self.quicklist)
 
+    # Append a new profile to the Unity quicklist
     def update_unity_quicklist(self, profile):
         if profile != 'defaults':
             profile_menu_item = Dbusmenu.Menuitem.new()
@@ -321,21 +338,25 @@ class MainWindow(Gtk.Window):
                                       profile)
             self.quicklist.child_append(profile_menu_item)
 
+    # If we delete a profile we must delete all Unity quicklist entries and
+    # rebuild the quicklist
     def clean_unity_quicklist(self):
         for x in self.quicklist.get_children():
             self.quicklist.child_delete(x)
         self.populate_unity_quicklist()
 
-    # Triggered when the connect button is clicked
+    # Triggered when a profile is selected via the Unity quicklist
     def on_unity_clicked(self, widget, entry, profile):
         read_config(profile)
         run_program(self)
 
+    # Trigged when we press 'Enter' or the 'Connect' button
     def enter_connect(self, *args):
         self.grab_textboxes()
         run_program(self)
 
-    # Triggered when the combobox is clicked
+    # Triggered when the combobox is clicked.  We load the selected profile
+    # from the config file.
     def on_profiles_combo_changed(self, combo):
         text = combo.get_active_text()
         for profile in list_profiles():
@@ -344,7 +365,7 @@ class MainWindow(Gtk.Window):
                 self.load_settings()
         self.profilename = text
 
-    # Triggered when the combobox is clicked
+    # Triggered when the combobox is clicked.  We set the selected RDP client.
     def on_program_combo_changed(self, combo):
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
@@ -387,7 +408,7 @@ class MainWindow(Gtk.Window):
              self.on_menu_help),
         ])
 
-    # Needed for the menu bar, I think
+    # Needed for the menu bar
     def create_ui_manager(self):
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
@@ -415,11 +436,17 @@ class MainWindow(Gtk.Window):
                          'Please select a profile to delete.')
         else:
             delete_config(self.profilename)
+            # reload the default config
             read_config('defaults')
             self.load_settings()
+            # Set profiles combobox to have no active item
             self.profiles_combo.set_active(-1)
+            # Add a blank string to the head end of the combobox to 'clear' it
             self.profiles_combo.prepend_text('')
+            # Set the blank string active to again, to 'clear' the combobox
             self.profiles_combo.set_active(0)
+            # Now that we've 'cleared' the combobox text, let's delete the
+            # blank entry and then repopulate the entire combobox
             active = self.profiles_combo.get_active()
             self.profiles_combo.remove(active)
             self.populate_profiles_combobox()
@@ -484,6 +511,7 @@ class MainWindow(Gtk.Window):
 
 
 def _main():
+    # Read the default profile and then save it if it doesn't already exist
     read_config('defaults')
     save_config('defaults')
     # Make the GUI!
