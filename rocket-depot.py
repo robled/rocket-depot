@@ -202,10 +202,15 @@ class MainWindow(Gtk.Window):
         geometrylabel = Gtk.Label("Geometry")
         programlabel = Gtk.Label("RDP Client")
 
-        # Adding our list of profiles to the combobox.
+        # Profiles combobox
         self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
         self.populate_profiles_combobox()
         self.profiles_combo.connect("changed", self.on_profiles_combo_changed)
+        # If an existing profile name has been typed into the profiles
+        # combobox, allow the 'enter' key to launch the RDP client
+        profiles_combo_entry = self.profiles_combo.get_children()[0]
+        profiles_combo_entry.connect("activate", self.enter_connect,
+                                     profiles_combo_entry)
 
         # Text entry fields
         self.hostentry = Gtk.Entry()
