@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 import string
 import subprocess
 import time
@@ -151,8 +152,12 @@ def run_program(window):
         params.append(client_opts[client]['user']
                       + '%s' % string.strip(options['user']))
     if options['geometry'] != '':
-        params.append(client_opts[client]['geometry']
-                      + '%s' % string.strip(options['geometry']))
+        if options['geometry'].find('%') == -1:
+            params.append(client_opts[client]['geometry']
+                          + '%s' % string.strip(options['geometry']))
+        else:
+            params.append(client_opts[client]['geometry']
+                          + window.geo_percent(options['geometry']))
     if options['fullscreen'] == 'true':
         params.append(client_opts[client]['fullscreen'])
     if options['grabkeyboard'] == 'false':
@@ -168,7 +173,7 @@ def run_program(window):
     # Wait for DNS resolution or connection failures
     time.sleep(1)
     # If RDP client died, display stderr via popup
-    if p.poll() != None:
+    if p.poll() is not None:
         window.on_warn(None, 'Connection Error', '%s: \n' % client +
                        p.communicate()[1])
 
@@ -245,12 +250,12 @@ class MainWindow(Gtk.Window):
         # Checkbox for grabbing the keyboard
         self.grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
         self.grabkeyboardbutton.connect("toggled", self.on_button_toggled,
-                                   "grabkeyboard")
+                                        "grabkeyboard")
 
         # Checkbox for fullscreen view
         self.fullscreenbutton = Gtk.CheckButton("Fullscreen")
         self.fullscreenbutton.connect("toggled", self.on_button_toggled,
-                                 "fullscreen")
+                                      "fullscreen")
 
         # Quit button
         quitbutton = Gtk.Button(label="Quit")
@@ -290,8 +295,21 @@ class MainWindow(Gtk.Window):
         self.load_settings()
         self.profilename = 'defaults'
         # Set up Unity quicklist
-        if unity == True:
+        if unity is True:
             self.create_unity_quicklist()
+
+    def geo_percent(self, geometry):
+        cleangeo = int(re.sub('[^0-9]', '', geometry))
+        # Get the screen from the GtkWindow
+        screen = self.get_screen()
+        # Using the screen of the Window, the monitor it's on can be identified
+        monitor = screen.get_monitor_at_window(screen.get_active_window())
+        # Then get the geometry of that monitor
+        mongeometry = screen.get_monitor_geometry(monitor)
+        cleangeo /= 100.
+        width = int(round(cleangeo * mongeometry.width))
+        height = int(round(cleangeo * mongeometry.height))
+        return "%sx%s" % (width, height)
 
     def populate_profiles_combobox(self):
         self.profiles_combo.get_model().clear()
@@ -414,7 +432,7 @@ class MainWindow(Gtk.Window):
         else:
             save_config(self.profilename, self)
             self.populate_profiles_combobox()
-            if unity == True:
+            if unity is True:
                 self.update_unity_quicklist(self.profilename)
 
     # When the delete config button is clicked on the menu bar
@@ -432,7 +450,7 @@ class MainWindow(Gtk.Window):
             active = self.profiles_combo.get_active()
             self.profiles_combo.remove(active)
             self.populate_profiles_combobox()
-            if unity == True:
+            if unity is True:
                 self.clean_unity_quicklist()
 
     # When the save config button is clicked on the menu bar
