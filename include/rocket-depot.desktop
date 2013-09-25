@@ -2,6 +2,6 @@
 Type=Application
 Name=rocket-depot
 Categories=Network;Application;
-Icon=gnome-fs-web
+Icon=/path/to/rocket-depot.svg
 Exec=/path/to/rocket-depot.py
 StartupWMClass=rocket-depot
