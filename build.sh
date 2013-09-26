@@ -19,4 +19,4 @@ debuild -S -sa
 echo
 echo 'To upload to PPA/pypi, copypasta:'
 echo "dput ppa:robled/rocket-depot deb_dist/rocket-depot_"$bigv"-"$littlev"_source.changes"
-echo 'python setup.py sdist upload'
+echo 'python setup.py sdist upload -r https://pypi.python.org/pypi'
