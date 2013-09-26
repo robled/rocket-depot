@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Rocket Depot
+Comment=Remote Desktop Launcher
+Categories=GNOME;GTK;Network;Application;
+Exec=rocket-depot
+Icon=rocket-depot
+StartupWMClass=rocket-depot
+Terminal=false
+Type=Application
