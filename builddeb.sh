@@ -2,8 +2,6 @@
 
 littlev=$(grep Debian-Version stdeb.cfg | awk {'print $2'})
 bigv=$(grep version setup.py | awk {'print $3'} | cut -c 2-4)
-echo $littlev
-echo $bigv
 
 if [ -d "deb_dist" ] && [ -d "rocket_depot.egg-info" ]; then
     echo 'cleaning previous build'
@@ -16,7 +14,6 @@ dpkg-source -x rocket-depot_$bigv-$littlev.dsc
 cd rocket-depot-$bigv
 debuild -S -sa
 
-echo 
+echo
 echo 'To upload to PPA, copypasta:'
 echo "dput ppa:robled/rocket-depot deb_dist/rocket-depot_"$bigv"-"$littlev"_source.changes"
-
