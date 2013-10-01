@@ -1,7 +1,7 @@
 #!/bin/bash
 
 littlev=$(grep Debian-Version stdeb.cfg | awk {'print $2'})
-bigv=$(grep version setup.py | awk {'print $3'} | cut -c 2-4)
+bigv=$(grep version setup.py | awk {'print $3'} | cut -c 2-5)
 cleanlist=('deb_dist' 'rocket_depot.egg-info' 'dist')
 
 function clean {
@@ -23,7 +23,7 @@ function build {
     echo
     echo 'To upload to PPA/pypi, copypasta:'
     echo "dput ppa:robled/rocket-depot deb_dist/rocket-depot_"$bigv"-"$littlev"_source.changes"
-    echo 'python setup.py sdist upload -r https://pypi.python.org/pypi'
+    echo 'python setup.py sdist upload -r https://pypi.python.org/pypi --sign'
 }
 
 
