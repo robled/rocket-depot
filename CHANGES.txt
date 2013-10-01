@@ -1,2 +1,5 @@
 0.1 (September 25th, 2013)
   - Initial release
+
+0.11 (October 1st, 2013)
+  - Better compatibility with released versions of FreeRDP
