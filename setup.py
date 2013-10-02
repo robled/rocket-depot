@@ -4,7 +4,7 @@ import subprocess
 
 setup(
     name = 'rocket-depot',
-    version = '0.11',
+    version = '0.12',
     scripts = ['rocket-depot'],
 
     # metadata for upload to PyPI
