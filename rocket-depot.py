@@ -2,6 +2,7 @@
 
 import os
 import re
+import shlex
 import string
 import subprocess
 import time
@@ -16,8 +17,20 @@ if de == 'ubuntu' or de == 'ubuntu-2d':
 else:
     unity = False
 
+# Local user homedir
+homedir = os.environ['HOME']
+
+# Create config dir
+def create_config_dir():
+    configdir = '%s/.config/rocket-depot' % homedir
+    if not os.path.exists(configdir):
+        try:
+            os.mkdir(configdir, 0700)
+        except:
+            print 'Error:  Unable to create config directory.'
+
 # Our config dotfile
-configfile = '%s/.rocket-depot' % os.environ['HOME']
+configfile = '%s/.config/rocket-depot/config.ini' % homedir
 config = ConfigParser.RawConfigParser()
 config.read(configfile)
 
@@ -112,18 +125,18 @@ def run_program(window):
             'host': '',
             'user': '-u',
             'geometry': '-g',
-            'homeshare': '-rdisk:home=' + os.environ['HOME'],
+            'homeshare': '-rdisk:home=' + homedir,
             'grabkeyboard': '-K',
             'fullscreen': '-f'
         },
         'xfreerdp': {
-            'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
-            'host': '/v:',
-            'user': '/u:',
-            'geometry': '/size:',
-            'homeshare': '+home-drive',
-            'grabkeyboard': '-grab-keyboard',
-            'fullscreen': '/f'
+            'stdopts': ['xfreerdp', '--no-nla', '--plugin', 'cliprdr'],
+            'host': '',
+            'user': '-u',
+            'geometry': '-g',
+            'homeshare': '--plugin rdpdr --data disk:home:' + homedir + ' --',
+            'grabkeyboard': '-K',
+            'fullscreen': '-f'
         }
     }
 
@@ -140,31 +153,35 @@ def run_program(window):
         return
     # Add specified options to the parameter list
     if options['user'] != '':
-        params.append(client_opts[client]['user']
-                      + '%s' % string.strip(options['user']))
+        params.append(client_opts[client]['user'])
+        # We put quotes around the username so that the domain\username format
+        # doesn't get escaped
+        params.append("'%s'" % string.strip(options['user']))
     # Detect percent symbol in geometry field.  If it exists we do math to
     # use the correct resolution for the active monitor.  Otherwise we submit
     # a given resolution such as 1024x768 to the list of parameters.
     if options['geometry'] != '':
         if options['geometry'].find('%') == -1:
-            params.append(client_opts[client]['geometry']
-                          + '%s' % string.strip(options['geometry']))
+            params.append(client_opts[client]['geometry'])
+            params.append('%s' % string.strip(options['geometry']))
         else:
-            params.append(client_opts[client]['geometry']
-                          + window.geo_percent(options['geometry']))
+            params.append(client_opts[client]['geometry'])
+            params.append(window.geo_percent(options['geometry']))
     if options['fullscreen'] == 'true':
         params.append(client_opts[client]['fullscreen'])
     if options['grabkeyboard'] == 'false':
         params.append(client_opts[client]['grabkeyboard'])
     if options['homeshare'] == 'true':
         params.append(client_opts[client]['homeshare'])
-    # Hostname goes last in the list or parameters
+    # Hostname goes last in the list of parameters
     params.append(client_opts[client]['host']
                   + '%s' % string.strip(options['host']))
+    # Clean up params list to make it shell compliant
+    cmdline = shlex.split(' '.join(params))
     # Print the command line that we constructed to the terminal
-    print 'Command to execute: \n' + ' '.join(str(param) for param in params)
+    print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
     # Make it go!
-    p = subprocess.Popen(params, stderr=subprocess.PIPE)
+    p = subprocess.Popen(cmdline, stderr=subprocess.PIPE)
     # Wait for DNS resolution or connection failures
     time.sleep(1)
     # If RDP client died, display stderr from RDP client via popup
@@ -324,12 +341,10 @@ class MainWindow(Gtk.Window):
 
     # Create the Unity quicklist and populate it with our profiles
     def create_unity_quicklist(self):
-        self.um_launcher_entry = \
-                                 Unity.LauncherEntry.get_for_desktop_id(
-                                 "rocket-depot.desktop")
+        entry = Unity.LauncherEntry.get_for_desktop_id("rocket-depot.desktop")
         self.quicklist = Dbusmenu.Menuitem.new()
         self.populate_unity_quicklist()
-        self.um_launcher_entry.set_property("quicklist", self.quicklist)
+        entry.set_property("quicklist", self.quicklist)
 
     # Append a new profile to the Unity quicklist
     def update_unity_quicklist(self, profile):
@@ -489,7 +504,8 @@ class MainWindow(Gtk.Window):
     def on_about(self, widget):
         about = Gtk.AboutDialog()
         about.set_program_name("Rocket Depot")
-        about.set_version("0.1")
+        about.set_version("0.12")
+        about.set_copyright("2013 David Roble")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
         about.run()
@@ -517,6 +533,7 @@ class MainWindow(Gtk.Window):
 
 def _main():
     # Read the default profile and then save it if it doesn't already exist
+    create_config_dir()
     read_config('defaults')
     save_config('defaults')
     # Make the GUI!
