@@ -1,6 +1,6 @@
 #### Rocket Depot
 Rocket Depot is a simple graphical frontend for [rdesktop](http://www.rdesktop.org/) and [FreeRDP](http://www.freerdp.com/) with
-support for connection profiles.  It runs on Linux desktops using GTK3 and
+support for connection profiles.  It runs on Linux desktops using GTK and
 takes advantage of modern desktop environment features such as Unity
 Quicklists.
 
@@ -15,6 +15,3 @@ Quicklists.
 
 ##### [PyPI](https://pypi.python.org/pypi/rocket-depot)
     sudo pip install rocket-depot
-    
-#### Supported RDP Clients
-Rocket Depot supports rdesktop and FreeRDP.  The Ubuntu package depends on rdesktop.  If you'd like to use FreeRDP, be aware that only the [new command-line interface](https://github.com/FreeRDP/FreeRDP/wiki/CommandLineInterface) is supported at this time.  To ensure compatibility, the [FreeRDP PPA](https://launchpad.net/~freerdp-team/+archive/freerdp) is recommended if running Ubuntu, otherwise make sure your FreeRDP version is 1.0.1 or better.  
