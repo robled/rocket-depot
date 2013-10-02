@@ -3,3 +3,6 @@
 
 0.11 (October 1st, 2013)
   - Better compatibility with released versions of FreeRDP
+
+0.12 (October 2nd, 2013)
+  - Config file now follows XDG base directory spec
