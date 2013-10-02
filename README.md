@@ -15,3 +15,5 @@ Quicklists.
 
 ##### [PyPI](https://pypi.python.org/pypi/rocket-depot)
     sudo pip install rocket-depot
+    
+#### [Changelog](https://github.com/robled/rocket-depot/blob/master/CHANGES.txt)
