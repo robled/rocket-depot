@@ -20,8 +20,17 @@ else:
 # Local user homedir
 homedir = os.environ['HOME']
 
+# Create config dir
+def create_config_dir():
+    configdir = '%s/.config/rocket-depot' % homedir
+    if not os.path.exists(configdir):
+        try:
+            os.mkdir(configdir, 0700)
+        except:
+            print 'Error:  Unable to create config directory.'
+
 # Our config dotfile
-configfile = '%s/.rocket-depot' % homedir
+configfile = '%s/.config/rocket-depot/config.ini' % homedir
 config = ConfigParser.RawConfigParser()
 config.read(configfile)
 
@@ -524,6 +533,7 @@ class MainWindow(Gtk.Window):
 
 def _main():
     # Read the default profile and then save it if it doesn't already exist
+    create_config_dir()
     read_config('defaults')
     save_config('defaults')
     # Make the GUI!
