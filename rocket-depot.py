@@ -25,7 +25,7 @@ def create_config_dir():
     if not os.path.exists(configdir):
         try:
             os.mkdir(configdir, 0700)
-        except:
+        except OSError:
             print 'Error:  Unable to create config directory.'
 
 # Our config dotfile
