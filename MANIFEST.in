@@ -1,1 +1,2 @@
+include rocket-depot.py
 recursive-include data *
