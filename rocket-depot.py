@@ -3,7 +3,6 @@
 import os
 import re
 import shlex
-import string
 import subprocess
 import time
 import ConfigParser
@@ -156,14 +155,14 @@ def run_program(window):
         params.append(client_opts[client]['user'])
         # We put quotes around the username so that the domain\username format
         # doesn't get escaped
-        params.append("'%s'" % string.strip(options['user']))
+        params.append("'%s'" % str.strip(options['user']))
     # Detect percent symbol in geometry field.  If it exists we do math to
     # use the correct resolution for the active monitor.  Otherwise we submit
     # a given resolution such as 1024x768 to the list of parameters.
     if options['geometry'] != '':
         if options['geometry'].find('%') == -1:
             params.append(client_opts[client]['geometry'])
-            params.append('%s' % string.strip(options['geometry']))
+            params.append('%s' % str.strip(options['geometry']))
         else:
             params.append(client_opts[client]['geometry'])
             params.append(window.geo_percent(options['geometry']))
@@ -175,7 +174,7 @@ def run_program(window):
         params.append(client_opts[client]['homeshare'])
     # Hostname goes last in the list of parameters
     params.append(client_opts[client]['host']
-                  + '%s' % string.strip(options['host']))
+                  + '%s' % str.strip(options['host']))
     # Clean up params list to make it shell compliant
     cmdline = shlex.split(' '.join(params))
     # Print the command line that we constructed to the terminal
