@@ -446,7 +446,7 @@ class MainWindow(Gtk.Window):
             save_config(self.profilename, self)
             self.populate_profiles_combobox()
             if unity is True:
-                self.update_unity_quicklist(self.profilename)
+                self.clean_unity_quicklist()
 
     # When the delete config button is clicked on the menu bar
     def delete_current_config(self, widget):
