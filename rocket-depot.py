@@ -19,6 +19,7 @@ else:
 # Local user homedir
 homedir = os.environ['HOME']
 
+
 # Create config dir
 def create_config_dir():
     configdir = '%s/.config/rocket-depot' % homedir
@@ -220,6 +221,8 @@ class MainWindow(Gtk.Window):
 
         # Profiles combobox
         self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
+        self.profiles_combo.set_tooltip_text('List of saved connection '
+                                             'profiles')
         self.populate_profiles_combobox()
         self.profiles_combo.connect("changed", self.on_profiles_combo_changed)
         # If an existing profile name has been typed into the profiles
@@ -230,10 +233,17 @@ class MainWindow(Gtk.Window):
 
         # Text entry fields
         self.hostentry = Gtk.Entry()
+        self.hostentry.set_tooltip_text('Hostname or IP address of RDP server')
         self.hostentry.connect("activate", self.enter_connect, self.hostentry)
         self.userentry = Gtk.Entry()
+        self.userentry.set_tooltip_text('''RDP username.
+Domain credentials may be entered in domain\username format:
+e.g. "example.com\myusername"''')
         self.userentry.connect("activate", self.enter_connect, self.userentry)
         self.geometryentry = Gtk.Entry()
+        self.geometryentry.set_tooltip_text('''Resolution of RDP window.
+Can be set to a specific resolution or a percentage:
+e.g. "1024x768" or "80%"''')
         self.geometryentry.connect("activate",
                                    self.enter_connect, self.geometryentry)
 
@@ -247,6 +257,7 @@ class MainWindow(Gtk.Window):
         for key in self.programs:
             program_store.append([key])
         self.program_combo = Gtk.ComboBox.new_with_model(program_store)
+        self.program_combo.set_tooltip_text('List of supported RDP clients')
         self.program_combo.connect("changed", self.on_program_combo_changed)
         self.program_renderer_text = Gtk.CellRendererText()
         self.program_combo.pack_start(self.program_renderer_text, True)
@@ -254,16 +265,22 @@ class MainWindow(Gtk.Window):
 
         # Checkbox for sharing our home directory
         self.homedirbutton = Gtk.CheckButton("Share Home Dir")
+        self.homedirbutton.set_tooltip_text('Share local home directory with '
+                                            'RDP server')
         self.homedirbutton.connect("toggled", self.on_button_toggled,
                                    "homeshare")
 
         # Checkbox for grabbing the keyboard
         self.grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
+        self.grabkeyboardbutton.set_tooltip_text('Send all keyboard inputs to '
+                                                 'RDP server')
         self.grabkeyboardbutton.connect("toggled", self.on_button_toggled,
                                         "grabkeyboard")
 
         # Checkbox for fullscreen view
         self.fullscreenbutton = Gtk.CheckButton("Fullscreen")
+        self.fullscreenbutton.set_tooltip_text('Run RDP client in fullscreen '
+                                               'mode')
         self.fullscreenbutton.connect("toggled", self.on_button_toggled,
                                       "fullscreen")
 
