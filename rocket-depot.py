@@ -152,10 +152,6 @@ def run_program(window):
     # Add standard options to the parameter list
     for x in client_opts[client]['stdopts']:
         params.append(x)
-    # Throw an error if the required host field is empty
-    if not options['host']:
-        window.on_warn(None, 'No Host', 'No Host or IP Address Given')
-        return
     # Add specified options to the parameter list
     if options['user'] != '':
         params.append(client_opts[client]['user'])
@@ -300,8 +296,8 @@ e.g. "1024x768" or "80%"''')
         quitbutton.connect("clicked", self.quit)
 
         # Connect button
-        connectbutton = Gtk.Button(label="Connect")
-        connectbutton.connect("clicked", self.enter_connect)
+        self.connectbutton = Gtk.Button(label="Connect")
+        self.connectbutton.connect("clicked", self.enter_connect)
 
         # Grid to which we attach all of our widgets
         grid.attach(menubar, 0, 0, 12, 4)
@@ -326,7 +322,7 @@ e.g. "1024x768" or "80%"''')
         grid.attach_next_to(self.fullscreenbutton, self.grabkeyboardbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach(quitbutton, 0, 28, 4, 4)
-        grid.attach_next_to(connectbutton, quitbutton,
+        grid.attach_next_to(self.connectbutton, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
         # Load the default profile on startup
@@ -392,24 +388,32 @@ e.g. "1024x768" or "80%"''')
             self.quicklist.child_delete(x)
         self.populate_unity_quicklist()
 
+    def start_thread(self):
+        # Throw an error if the required host field is empty
+        if not options['host']:
+            self.on_warn(None, 'No Host', 'No Host or IP Address Given')
+        else:
+            self.connectbutton.set_sensitive(False)
+            cmdline = run_program(self)
+            thread = WorkerThread(self.work_finished_cb, cmdline)
+            thread.start()
+
     # Triggered when a profile is selected via the Unity quicklist
     def on_unity_clicked(self, widget, entry, profile):
         read_config(profile)
-        run_program(self)
+        self.start_thread()
 
     # Trigged when we press 'Enter' or the 'Connect' button
     def enter_connect(self, *args):
         self.grab_textboxes()
-        cmdline = run_program(self)
-        thread = WorkerThread(self.work_finished_cb, cmdline)
-        thread.start()
+        self.start_thread()
 
     def work_finished_cb(self):
-        #self.button.set_sensitive(True)
         #self.spinner.stop()
         if p.poll() is not None:
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
                            p.communicate()[1])
+        self.connectbutton.set_sensitive(True)
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
