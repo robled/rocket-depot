@@ -4,9 +4,13 @@ import os
 import re
 import shlex
 import subprocess
+import threading
 import time
 import ConfigParser
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
+
+# Begin thread stuff early
+GObject.threads_init()
 
 # Enable special features if we're running Ubuntu Unity
 de = os.environ.get('DESKTOP_SESSION')
@@ -141,6 +145,7 @@ def run_program(window):
     }
 
     # This makes the next bit a little cleaner name-wise
+    global client
     client = options['program']
     # List of commandline paramenters for our RDP client
     params = []
@@ -180,14 +185,20 @@ def run_program(window):
     cmdline = shlex.split(' '.join(params))
     # Print the command line that we constructed to the terminal
     print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
-    # Make it go!
-    p = subprocess.Popen(cmdline, stderr=subprocess.PIPE)
-    # Wait for DNS resolution or connection failures
-    time.sleep(1)
-    # If RDP client died, display stderr from RDP client via popup
-    if p.poll() is not None:
-        window.on_warn(None, 'Connection Error', '%s: \n' % client +
-                       p.communicate()[1])
+    return cmdline
+
+
+class WorkerThread(threading.Thread):
+    def __init__(self, callback, cmdline):
+        threading.Thread.__init__(self)
+        self.callback = callback
+        self.cmdline = cmdline
+
+    def run(self):
+        global p
+        p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
+        time.sleep(2)
+        GObject.idle_add(self.callback)
 
 
 # GUI stuff
@@ -389,7 +400,16 @@ e.g. "1024x768" or "80%"''')
     # Trigged when we press 'Enter' or the 'Connect' button
     def enter_connect(self, *args):
         self.grab_textboxes()
-        run_program(self)
+        cmdline = run_program(self)
+        thread = WorkerThread(self.work_finished_cb, cmdline)
+        thread.start()
+
+    def work_finished_cb(self):
+        #self.button.set_sensitive(True)
+        #self.spinner.stop()
+        if p.poll() is not None:
+            self.on_warn(None, 'Connection Error', '%s: \n' % client +
+                           p.communicate()[1])
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
@@ -553,6 +573,7 @@ def _main():
     read_config('defaults')
     save_config('defaults')
     # Make the GUI!
+    global window
     window = MainWindow()
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
