@@ -295,6 +295,9 @@ e.g. "1024x768" or "80%"''')
         quitbutton = Gtk.Button(label="Quit")
         quitbutton.connect("clicked", self.quit)
 
+        # Progress spinner
+        self.spinner = Gtk.Spinner()
+
         # Connect button
         self.connectbutton = Gtk.Button(label="Connect")
         self.connectbutton.connect("clicked", self.enter_connect)
@@ -323,6 +326,8 @@ e.g. "1024x768" or "80%"''')
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach(quitbutton, 0, 28, 4, 4)
         grid.attach_next_to(self.connectbutton, quitbutton,
+                            Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.spinner, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
         # Load the default profile on startup
@@ -393,7 +398,9 @@ e.g. "1024x768" or "80%"''')
         if not options['host']:
             self.on_warn(None, 'No Host', 'No Host or IP Address Given')
         else:
-            self.connectbutton.set_sensitive(False)
+            self.connectbutton.hide()
+            self.spinner.show()
+            self.spinner.start()
             cmdline = run_program(self)
             thread = WorkerThread(self.work_finished_cb, cmdline)
             thread.start()
@@ -409,11 +416,12 @@ e.g. "1024x768" or "80%"''')
         self.start_thread()
 
     def work_finished_cb(self):
-        #self.spinner.stop()
+        self.spinner.stop()
+        self.spinner.hide()
+        self.connectbutton.show()
         if p.poll() is not None:
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
                            p.communicate()[1])
-        self.connectbutton.set_sensitive(True)
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
@@ -581,6 +589,8 @@ def _main():
     window = MainWindow()
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
+    # Hide the progress spinner until it is needed
+    window.spinner.hide()
     # Set focus to the host entry box on startup
     window.hostentry.grab_focus()
     Gtk.main()
