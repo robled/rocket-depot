@@ -1,6 +1,10 @@
-from setuptools import setup, find_packages
-from distutils.log import warn, info, error
+import os
+import shutil
 import subprocess
+from distutils.log import warn, info, error
+from setuptools import setup, find_packages
+
+shutil.copyfile('rocket-depot.py', 'rocket-depot')
 
 setup(
     name = 'rocket-depot',

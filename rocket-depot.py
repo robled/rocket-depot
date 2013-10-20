@@ -3,11 +3,14 @@
 import os
 import re
 import shlex
-import string
 import subprocess
+import threading
 import time
 import ConfigParser
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
+
+# Begin thread stuff early
+GObject.threads_init()
 
 # Enable special features if we're running Ubuntu Unity
 de = os.environ.get('DESKTOP_SESSION')
@@ -20,13 +23,14 @@ else:
 # Local user homedir
 homedir = os.environ['HOME']
 
+
 # Create config dir
 def create_config_dir():
     configdir = '%s/.config/rocket-depot' % homedir
     if not os.path.exists(configdir):
         try:
             os.mkdir(configdir, 0700)
-        except:
+        except OSError:
             print 'Error:  Unable to create config directory.'
 
 # Our config dotfile
@@ -141,29 +145,26 @@ def run_program(window):
     }
 
     # This makes the next bit a little cleaner name-wise
+    global client
     client = options['program']
     # List of commandline paramenters for our RDP client
     params = []
     # Add standard options to the parameter list
     for x in client_opts[client]['stdopts']:
         params.append(x)
-    # Throw an error if the required host field is empty
-    if not options['host']:
-        window.on_warn(None, 'No Host', 'No Host or IP Address Given')
-        return
     # Add specified options to the parameter list
     if options['user'] != '':
         params.append(client_opts[client]['user'])
         # We put quotes around the username so that the domain\username format
         # doesn't get escaped
-        params.append("'%s'" % string.strip(options['user']))
+        params.append("'%s'" % str.strip(options['user']))
     # Detect percent symbol in geometry field.  If it exists we do math to
     # use the correct resolution for the active monitor.  Otherwise we submit
     # a given resolution such as 1024x768 to the list of parameters.
     if options['geometry'] != '':
         if options['geometry'].find('%') == -1:
             params.append(client_opts[client]['geometry'])
-            params.append('%s' % string.strip(options['geometry']))
+            params.append('%s' % str.strip(options['geometry']))
         else:
             params.append(client_opts[client]['geometry'])
             params.append(window.geo_percent(options['geometry']))
@@ -175,19 +176,25 @@ def run_program(window):
         params.append(client_opts[client]['homeshare'])
     # Hostname goes last in the list of parameters
     params.append(client_opts[client]['host']
-                  + '%s' % string.strip(options['host']))
+                  + '%s' % str.strip(options['host']))
     # Clean up params list to make it shell compliant
     cmdline = shlex.split(' '.join(params))
     # Print the command line that we constructed to the terminal
     print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
-    # Make it go!
-    p = subprocess.Popen(cmdline, stderr=subprocess.PIPE)
-    # Wait for DNS resolution or connection failures
-    time.sleep(1)
-    # If RDP client died, display stderr from RDP client via popup
-    if p.poll() is not None:
-        window.on_warn(None, 'Connection Error', '%s: \n' % client +
-                       p.communicate()[1])
+    return cmdline
+
+
+class WorkerThread(threading.Thread):
+    def __init__(self, callback, cmdline):
+        threading.Thread.__init__(self)
+        self.callback = callback
+        self.cmdline = cmdline
+
+    def run(self):
+        global p
+        p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
+        time.sleep(2)
+        GObject.idle_add(self.callback)
 
 
 # GUI stuff
@@ -221,6 +228,8 @@ class MainWindow(Gtk.Window):
 
         # Profiles combobox
         self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
+        self.profiles_combo.set_tooltip_text('List of saved connection '
+                                             'profiles')
         self.populate_profiles_combobox()
         self.profiles_combo.connect("changed", self.on_profiles_combo_changed)
         # If an existing profile name has been typed into the profiles
@@ -231,10 +240,17 @@ class MainWindow(Gtk.Window):
 
         # Text entry fields
         self.hostentry = Gtk.Entry()
+        self.hostentry.set_tooltip_text('Hostname or IP address of RDP server')
         self.hostentry.connect("activate", self.enter_connect, self.hostentry)
         self.userentry = Gtk.Entry()
+        self.userentry.set_tooltip_text('''RDP username.
+Domain credentials may be entered in domain\username format:
+e.g. "example.com\myusername"''')
         self.userentry.connect("activate", self.enter_connect, self.userentry)
         self.geometryentry = Gtk.Entry()
+        self.geometryentry.set_tooltip_text('''Resolution of RDP window.
+Can be set to a specific resolution or a percentage:
+e.g. "1024x768" or "80%"''')
         self.geometryentry.connect("activate",
                                    self.enter_connect, self.geometryentry)
 
@@ -248,6 +264,7 @@ class MainWindow(Gtk.Window):
         for key in self.programs:
             program_store.append([key])
         self.program_combo = Gtk.ComboBox.new_with_model(program_store)
+        self.program_combo.set_tooltip_text('List of supported RDP clients')
         self.program_combo.connect("changed", self.on_program_combo_changed)
         self.program_renderer_text = Gtk.CellRendererText()
         self.program_combo.pack_start(self.program_renderer_text, True)
@@ -255,16 +272,22 @@ class MainWindow(Gtk.Window):
 
         # Checkbox for sharing our home directory
         self.homedirbutton = Gtk.CheckButton("Share Home Dir")
+        self.homedirbutton.set_tooltip_text('Share local home directory with '
+                                            'RDP server')
         self.homedirbutton.connect("toggled", self.on_button_toggled,
                                    "homeshare")
 
         # Checkbox for grabbing the keyboard
         self.grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
+        self.grabkeyboardbutton.set_tooltip_text('Send all keyboard inputs to '
+                                                 'RDP server')
         self.grabkeyboardbutton.connect("toggled", self.on_button_toggled,
                                         "grabkeyboard")
 
         # Checkbox for fullscreen view
         self.fullscreenbutton = Gtk.CheckButton("Fullscreen")
+        self.fullscreenbutton.set_tooltip_text('Run RDP client in fullscreen '
+                                               'mode')
         self.fullscreenbutton.connect("toggled", self.on_button_toggled,
                                       "fullscreen")
 
@@ -273,8 +296,8 @@ class MainWindow(Gtk.Window):
         quitbutton.connect("clicked", self.quit)
 
         # Connect button
-        connectbutton = Gtk.Button(label="Connect")
-        connectbutton.connect("clicked", self.enter_connect)
+        self.connectbutton = Gtk.Button(label="Connect")
+        self.connectbutton.connect("clicked", self.enter_connect)
 
         # Grid to which we attach all of our widgets
         grid.attach(menubar, 0, 0, 12, 4)
@@ -299,7 +322,7 @@ class MainWindow(Gtk.Window):
         grid.attach_next_to(self.fullscreenbutton, self.grabkeyboardbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach(quitbutton, 0, 28, 4, 4)
-        grid.attach_next_to(connectbutton, quitbutton,
+        grid.attach_next_to(self.connectbutton, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
         # Load the default profile on startup
@@ -365,15 +388,32 @@ class MainWindow(Gtk.Window):
             self.quicklist.child_delete(x)
         self.populate_unity_quicklist()
 
+    def start_thread(self):
+        # Throw an error if the required host field is empty
+        if not options['host']:
+            self.on_warn(None, 'No Host', 'No Host or IP Address Given')
+        else:
+            self.connectbutton.set_sensitive(False)
+            cmdline = run_program(self)
+            thread = WorkerThread(self.work_finished_cb, cmdline)
+            thread.start()
+
     # Triggered when a profile is selected via the Unity quicklist
     def on_unity_clicked(self, widget, entry, profile):
         read_config(profile)
-        run_program(self)
+        self.start_thread()
 
     # Trigged when we press 'Enter' or the 'Connect' button
     def enter_connect(self, *args):
         self.grab_textboxes()
-        run_program(self)
+        self.start_thread()
+
+    def work_finished_cb(self):
+        #self.spinner.stop()
+        if p.poll() is not None:
+            self.on_warn(None, 'Connection Error', '%s: \n' % client +
+                           p.communicate()[1])
+        self.connectbutton.set_sensitive(True)
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
@@ -447,7 +487,7 @@ class MainWindow(Gtk.Window):
             save_config(self.profilename, self)
             self.populate_profiles_combobox()
             if unity is True:
-                self.update_unity_quicklist(self.profilename)
+                self.clean_unity_quicklist()
 
     # When the delete config button is clicked on the menu bar
     def delete_current_config(self, widget):
@@ -537,6 +577,7 @@ def _main():
     read_config('defaults')
     save_config('defaults')
     # Make the GUI!
+    global window
     window = MainWindow()
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
