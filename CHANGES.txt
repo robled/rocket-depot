@@ -6,3 +6,8 @@
 
 0.12 (October 2nd, 2013)
   - Config file now follows XDG base directory spec
+
+0.13 (October 22nd, 2013)
+  - Fixed issue that caused duplicate entries in the Unity quicklist
+  - Added UI feedback when connecting to RDP servers
+  - Added tooltips for text entry boxes
