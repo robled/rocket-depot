@@ -552,7 +552,7 @@ e.g. "1024x768" or "80%"''')
     def on_about(self, widget):
         about = Gtk.AboutDialog()
         about.set_program_name("Rocket Depot")
-        about.set_version("0.12")
+        about.set_version("0.13")
         about.set_copyright("2013 David Roble")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
