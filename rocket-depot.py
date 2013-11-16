@@ -8,20 +8,13 @@ import threading
 import time
 import ConfigParser
 from gi.repository import Gtk, GObject
-
-# Begin thread stuff early
-GObject.threads_init()
-
-# Enable special features if we're running Ubuntu Unity
-de = os.environ.get('DESKTOP_SESSION')
-if de == 'ubuntu' or de == 'ubuntu-2d':
+# Import special features if we're running Ubuntu Unity
+if (os.environ.get('DESKTOP_SESSION') == 'ubuntu' or
+        os.environ.get('DESKTOP_SESSION') == 'ubuntu-2d'):
     from gi.repository import Unity, Dbusmenu
     unity = True
 else:
     unity = False
-
-# Local user homedir
-homedir = os.environ['HOME']
 
 
 # Create config dir
@@ -33,10 +26,6 @@ def create_config_dir():
         except OSError:
             print 'Error:  Unable to create config directory.'
 
-# Our config dotfile
-configfile = '%s/.config/rocket-depot/config.ini' % homedir
-config = ConfigParser.RawConfigParser()
-config.read(configfile)
 
 # Default options.  Overridden by config file.
 options = {
@@ -49,23 +38,6 @@ options = {
     'grabkeyboard': 'false',
     'fullscreen': 'false'
 }
-
-# Menu bar layout
-UI_INFO = """
-<ui>
-  <menubar name='MenuBar'>
-    <menu action='FileMenu'>
-      <menuitem action='SaveCurrentConfig' />
-      <menuitem action='SaveCurrentConfigAsDefault' />
-      <menuitem action='DeleteCurrentConfig' />
-      <menuitem action='FileQuit' />
-    </menu>
-    <menu action='Help'>
-      <menuitem action='About'/>
-    </menu>
-  </menubar>
-</ui>
-"""
 
 
 # Open the config file for writing
@@ -205,6 +177,23 @@ class MainWindow(Gtk.Window):
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(8)
         self.set_wmclass('rocket-depot', 'rocket-depot')
+
+        # Menu bar layout
+        self.UI_INFO = """
+        <ui>
+          <menubar name='MenuBar'>
+            <menu action='FileMenu'>
+              <menuitem action='SaveCurrentConfig' />
+              <menuitem action='SaveCurrentConfigAsDefault' />
+              <menuitem action='DeleteCurrentConfig' />
+              <menuitem action='FileQuit' />
+            </menu>
+            <menu action='Help'>
+              <menuitem action='About'/>
+            </menu>
+          </menubar>
+        </ui>
+        """
 
         # Menu bar
         action_group = Gtk.ActionGroup("Menu")
@@ -421,7 +410,7 @@ e.g. "1024x768" or "80%"''')
         self.connectbutton.show()
         if p.poll() is not None:
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
-                           p.communicate()[1])
+                         p.communicate()[1])
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
@@ -480,7 +469,7 @@ e.g. "1024x768" or "80%"''')
     def create_ui_manager(self):
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
-        uimanager.add_ui_from_string(UI_INFO)
+        uimanager.add_ui_from_string(self.UI_INFO)
         # Add the accelerator group to the toplevel window
         accelgroup = uimanager.get_accel_group()
         self.add_accel_group(accelgroup)
@@ -580,8 +569,19 @@ e.g. "1024x768" or "80%"''')
 
 
 def _main():
-    # Read the default profile and then save it if it doesn't already exist
+    # Begin GUI thread stuff early
+    GObject.threads_init()
+    # Local user homedir and config file
+    global homedir
+    global configfile
+    global config
+    homedir = os.environ['HOME']
     create_config_dir()
+    # Our config dotfile
+    configfile = '%s/.config/rocket-depot/config.ini' % homedir
+    config = ConfigParser.RawConfigParser()
+    # Read the default profile and then save it if it doesn't already exist
+    config.read(configfile)
     read_config('defaults')
     save_config('defaults')
     # Make the GUI!
