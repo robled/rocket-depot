@@ -106,13 +106,13 @@ def run_program(window):
             'fullscreen': '-f'
         },
         'xfreerdp': {
-            'stdopts': ['xfreerdp', '--no-nla', '--plugin', 'cliprdr'],
-            'host': '',
-            'user': '-u',
-            'geometry': '-g',
-            'homeshare': '--plugin rdpdr --data disk:home:' + homedir + ' --',
-            'grabkeyboard': '-K',
-            'fullscreen': '-f'
+            'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
+            'host': '/v:',
+            'user': '/u:',
+            'geometry': '/size:',
+            'homeshare': '/drive:home,' + homedir,
+            'grabkeyboard': '-grab-keyboard',
+            'fullscreen': '/f'
         }
     }
 
@@ -126,20 +126,19 @@ def run_program(window):
         params.append(x)
     # Add specified options to the parameter list
     if options['user'] != '':
-        params.append(client_opts[client]['user'])
         # We put quotes around the username so that the domain\username format
         # doesn't get escaped
-        params.append("'%s'" % str.strip(options['user']))
+        slashuser = "'%s'" % str.strip(options['user'])
+        params.append(client_opts[client]['user'] + slashuser)
     # Detect percent symbol in geometry field.  If it exists we do math to
     # use the correct resolution for the active monitor.  Otherwise we submit
     # a given resolution such as 1024x768 to the list of parameters.
     if options['geometry'] != '':
+        geo = client_opts[client]['geometry']
         if options['geometry'].find('%') == -1:
-            params.append(client_opts[client]['geometry'])
-            params.append('%s' % str.strip(options['geometry']))
+            params.append(geo + '%s' % str.strip(options['geometry']))
         else:
-            params.append(client_opts[client]['geometry'])
-            params.append(window.geo_percent(options['geometry']))
+            params.append(geo + window.geo_percent(options['geometry']))
     if options['fullscreen'] == 'true':
         params.append(client_opts[client]['fullscreen'])
     if options['grabkeyboard'] == 'false':
