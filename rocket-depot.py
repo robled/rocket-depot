@@ -155,13 +155,14 @@ def run_program(window):
     print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
     return cmdline
 
-
+# Thread for RDP client launch feedback in UI
 class WorkerThread(threading.Thread):
     def __init__(self, callback, cmdline):
         threading.Thread.__init__(self)
         self.callback = callback
         self.cmdline = cmdline
 
+    # Start the client and wait some seconds for errors
     def run(self):
         global p
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
