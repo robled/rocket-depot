@@ -11,3 +11,6 @@
   - Fixed issue that caused duplicate entries in the Unity quicklist
   - Added UI feedback when connecting to RDP servers
   - Added tooltips for text entry boxes
+
+0.14 (March 1st, 2014)
+  - Added support for FreeRDP 1.1 (previous versions have been deprecated)
