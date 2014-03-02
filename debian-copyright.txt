@@ -3,7 +3,7 @@ Upstream-Name: rocket-depot
 Source: https://github.com/robled/rocket-depot
 
 Files: *
-Copyright: Copyright 2013 David Roble <robled@gmail.com>
+Copyright: Copyright 2014 David Roble <robled@gmail.com>
 License: BSD
 
 License: BSD
