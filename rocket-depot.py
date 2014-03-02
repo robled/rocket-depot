@@ -7,7 +7,7 @@ import subprocess
 import threading
 import time
 import ConfigParser
-from gi.repository import Gtk, GObject
+from gi.repository import GLib, GObject, Gtk
 # Import special features if we're running Ubuntu Unity
 if (os.environ.get('DESKTOP_SESSION') == 'ubuntu' or
         os.environ.get('DESKTOP_SESSION') == 'ubuntu-2d'):
@@ -166,7 +166,7 @@ class WorkerThread(threading.Thread):
         global p
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
         time.sleep(2)
-        GObject.idle_add(self.callback)
+        GLib.idle_add(self.callback)
 
 
 # GUI stuff
@@ -196,7 +196,7 @@ class MainWindow(Gtk.Window):
         """
 
         # Menu bar
-        action_group = Gtk.ActionGroup("Menu")
+        action_group = Gtk.ActionGroup(name="Menu")
         self.add_file_menu_actions(action_group)
         self.add_help_menu_actions(action_group)
         uimanager = self.create_ui_manager()
@@ -209,11 +209,11 @@ class MainWindow(Gtk.Window):
         self.add(grid)
 
         # Labels for text entry fields and comboboxes
-        profileslabel = Gtk.Label("Profile")
-        hostlabel = Gtk.Label("Host")
-        userlabel = Gtk.Label("Username")
-        geometrylabel = Gtk.Label("Geometry")
-        programlabel = Gtk.Label("RDP Client")
+        profileslabel = Gtk.Label(label="Profile")
+        hostlabel = Gtk.Label(label="Host")
+        userlabel = Gtk.Label(label="Username")
+        geometrylabel = Gtk.Label(label="Geometry")
+        programlabel = Gtk.Label(label="RDP Client")
 
         # Profiles combobox
         self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
@@ -260,21 +260,21 @@ e.g. "1024x768" or "80%"''')
         self.program_combo.add_attribute(self.program_renderer_text, "text", 0)
 
         # Checkbox for sharing our home directory
-        self.homedirbutton = Gtk.CheckButton("Share Home Dir")
+        self.homedirbutton = Gtk.CheckButton(label="Share Home Dir")
         self.homedirbutton.set_tooltip_text('Share local home directory with '
                                             'RDP server')
         self.homedirbutton.connect("toggled", self.on_button_toggled,
                                    "homeshare")
 
         # Checkbox for grabbing the keyboard
-        self.grabkeyboardbutton = Gtk.CheckButton("Grab Keyboard")
+        self.grabkeyboardbutton = Gtk.CheckButton(label="Grab Keyboard")
         self.grabkeyboardbutton.set_tooltip_text('Send all keyboard inputs to '
                                                  'RDP server')
         self.grabkeyboardbutton.connect("toggled", self.on_button_toggled,
                                         "grabkeyboard")
 
         # Checkbox for fullscreen view
-        self.fullscreenbutton = Gtk.CheckButton("Fullscreen")
+        self.fullscreenbutton = Gtk.CheckButton(label="Fullscreen")
         self.fullscreenbutton.set_tooltip_text('Run RDP client in fullscreen '
                                                'mode')
         self.fullscreenbutton.connect("toggled", self.on_button_toggled,
@@ -441,7 +441,7 @@ e.g. "1024x768" or "80%"''')
 
     # Triggered when the file menu is used
     def add_file_menu_actions(self, action_group):
-        action_filemenu = Gtk.Action("FileMenu", "File", None, None)
+        action_filemenu = Gtk.Action(name="FileMenu", label="File", tooltip=None, stock_id=None)
         action_group.add_action(action_filemenu)
         # Why do the functions here execute on startup if we add parameters?
         action_group.add_actions([("SaveCurrentConfig", None,
@@ -453,7 +453,7 @@ e.g. "1024x768" or "80%"''')
         action_group.add_actions([("DeleteCurrentConfig", None,
                                    "Delete Current Profile", None, None,
                                    self.delete_current_config)])
-        action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
+        action_filequit = Gtk.Action(name="FileQuit", label=None, tooltip=None, stock_id=Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.quit)
         action_group.add_action(action_filequit)
 
@@ -530,8 +530,8 @@ e.g. "1024x768" or "80%"''')
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
-        dialog = Gtk.MessageDialog(self, 0, Gtk.MessageType.WARNING,
-                                   Gtk.ButtonsType.OK, title,
+        dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.WARNING,
+                                   buttons=Gtk.ButtonsType.OK, text=title,
                                    title='Rocket Depot')
         dialog.format_secondary_text(message)
         dialog.run()
@@ -569,8 +569,6 @@ e.g. "1024x768" or "80%"''')
 
 
 def _main():
-    # Begin GUI thread stuff early
-    GObject.threads_init()
     # Local user homedir and config file
     global homedir
     global configfile
