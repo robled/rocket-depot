@@ -36,7 +36,8 @@ options = {
     'program': 'rdesktop',
     'homeshare': 'false',
     'grabkeyboard': 'false',
-    'fullscreen': 'false'
+    'fullscreen': 'false',
+    'clioptions': ''
 }
 
 
@@ -145,6 +146,8 @@ def run_program(window):
         params.append(client_opts[client]['grabkeyboard'])
     if options['homeshare'] == 'true':
         params.append(client_opts[client]['homeshare'])
+    if options['clioptions'] != '':
+        params.append(options['clioptions'])
     # Hostname goes last in the list of parameters
     params.append(client_opts[client]['host']
                   + '%s' % str.strip(options['host']))
@@ -152,6 +155,7 @@ def run_program(window):
     cmdline = shlex.split(' '.join(params))
     # Print the command line that we constructed to the terminal
     print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
+    print 'Extra options: \n' + options['clioptions']
     return cmdline
 
 # Thread for RDP client launch feedback in UI
@@ -213,6 +217,7 @@ class MainWindow(Gtk.Window):
         hostlabel = Gtk.Label(label="Host")
         userlabel = Gtk.Label(label="Username")
         geometrylabel = Gtk.Label(label="Geometry")
+        clioptionslabel = Gtk.Label(label="CLI Options")
         programlabel = Gtk.Label(label="RDP Client")
 
         # Profiles combobox
@@ -242,6 +247,10 @@ Can be set to a specific resolution or a percentage:
 e.g. "1024x768" or "80%"''')
         self.geometryentry.connect("activate",
                                    self.enter_connect, self.geometryentry)
+        self.clioptionsentry = Gtk.Entry()
+        self.clioptionsentry.set_tooltip_text('''Extra CLI options''')
+        self.clioptionsentry.connect("activate",
+                                   self.enter_connect, self.clioptionsentry)
 
         # Combobox for program selection
         program_store = Gtk.ListStore(str)
@@ -297,7 +306,8 @@ e.g. "1024x768" or "80%"''')
         grid.attach(hostlabel, 0, 8, 4, 4)
         grid.attach(userlabel, 0, 12, 4, 4)
         grid.attach(geometrylabel, 0, 16, 4, 4)
-        grid.attach(programlabel, 0, 20, 4, 4)
+        grid.attach(clioptionslabel, 0, 20, 4, 4)
+        grid.attach(programlabel, 0, 24, 4, 4)
         grid.attach_next_to(self.profiles_combo, profileslabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.hostentry, hostlabel,
@@ -306,14 +316,16 @@ e.g. "1024x768" or "80%"''')
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.geometryentry, geometrylabel,
                             Gtk.PositionType.RIGHT, 8, 4)
+        grid.attach_next_to(self.clioptionsentry, clioptionslabel,
+                            Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.program_combo, programlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach(self.homedirbutton, 0, 24, 4, 4)
+        grid.attach(self.homedirbutton, 0, 28, 4, 4)
         grid.attach_next_to(self.grabkeyboardbutton, self.homedirbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach_next_to(self.fullscreenbutton, self.grabkeyboardbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
-        grid.attach(quitbutton, 0, 28, 4, 4)
+        grid.attach(quitbutton, 0, 32, 4, 4)
         grid.attach_next_to(self.connectbutton, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.spinner, quitbutton,
@@ -527,6 +539,7 @@ e.g. "1024x768" or "80%"''')
         options['host'] = self.hostentry.get_text()
         options['user'] = self.userentry.get_text()
         options['geometry'] = self.geometryentry.get_text()
+        options['clioptions'] = self.clioptionsentry.get_text()
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
