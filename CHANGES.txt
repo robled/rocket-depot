@@ -14,3 +14,6 @@
 
 0.15 (March 1st, 2014)
   - Added support for FreeRDP 1.1 (previous versions have been deprecated)
+
+0.16 (March 6th, 2014)
+  - Added support for extra command-line options.
