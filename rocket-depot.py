@@ -56,13 +56,8 @@ def save_config(section, window=None):
     if not config.has_section(section):
         config.add_section(section)
     # Set all selected options
-    config.set(section, 'host', options['host'])
-    config.set(section, 'user', options['user'])
-    config.set(section, 'geometry', options['geometry'])
-    config.set(section, 'program', options['program'])
-    config.set(section, 'homeshare', options['homeshare'])
-    config.set(section, 'grabkeyboard', options['grabkeyboard'])
-    config.set(section, 'fullscreen', options['fullscreen'])
+    for opt in options:
+        config.set(section, opt, options[opt])
     write_config()
 
 
@@ -75,13 +70,9 @@ def delete_config(section):
 # Set options based on section in config file
 def read_config(section):
     if os.path.exists(configfile):
-        options['host'] = config.get(section, 'host')
-        options['user'] = config.get(section, 'user')
-        options['geometry'] = config.get(section, 'geometry')
-        options['program'] = config.get(section, 'program')
-        options['homeshare'] = config.get(section, 'homeshare')
-        options['grabkeyboard'] = config.get(section, 'grabkeyboard')
-        options['fullscreen'] = config.get(section, 'fullscreen')
+        for opt in options:
+            if config.has_option(section, opt):
+                options[opt] = config.get(section, opt)
 
 
 # Make a list of all profiles in config file.  Sort the order alphabetically,
@@ -155,7 +146,6 @@ def run_program(window):
     cmdline = shlex.split(' '.join(params))
     # Print the command line that we constructed to the terminal
     print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
-    print 'Extra options: \n' + options['clioptions']
     return cmdline
 
 # Thread for RDP client launch feedback in UI
@@ -566,6 +556,7 @@ e.g. "1024x768" or "80%"''')
         self.hostentry.set_text(options['host'])
         self.userentry.set_text(options['user'])
         self.geometryentry.set_text(options['geometry'])
+        self.clioptionsentry.set_text(options['clioptions'])
         self.program_combo.set_active(self.programs[options['program']])
         if options['homeshare'] == 'true':
             self.homedirbutton.set_active(True)
