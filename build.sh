@@ -2,7 +2,7 @@
 
 littlev=$(grep Debian-Version stdeb.cfg | awk {'print $2'})
 bigv=$(grep version setup.py | awk {'print $3'} | cut -c 2-5)
-cleanlist=('deb_dist' 'rocket_depot.egg-info' 'dist')
+cleanlist=('deb_dist' 'rocket_depot.egg-info' 'dist' 'rocket-depot')
 
 function clean {
     for i in "${cleanlist[@]}"
