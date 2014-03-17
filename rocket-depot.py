@@ -411,8 +411,11 @@ e.g. "1024x768" or "80%"''')
         self.spinner.hide()
         self.connectbutton.show()
         if p.poll() is not None:
+            error_text = p.communicate()[1]
+            if len(error_text) > 300:
+                error_text = error_text[:300] + '...'
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
-                         p.communicate()[1])
+                         error_text)
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
