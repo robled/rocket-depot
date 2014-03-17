@@ -159,7 +159,18 @@ class WorkerThread(threading.Thread):
     def run(self):
         global p
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
-        time.sleep(2)
+        global error_text
+        error_text = ''
+        start_time = time.time()
+        while (p.poll() is None):
+            # p.read is bad? check on this
+            error_text += p.stderr.read(8192)
+            time.sleep(1)
+            if (time.time() - start_time) > 5:
+              print "Timeout"
+              break
+        global rc
+        rc = p.returncode
         GLib.idle_add(self.callback)
 
 
@@ -410,8 +421,7 @@ e.g. "1024x768" or "80%"''')
         self.spinner.stop()
         self.spinner.hide()
         self.connectbutton.show()
-        if p.poll() is not None:
-            error_text = p.communicate()[1]
+        if rc != 0:
             if len(error_text) > 300:
                 error_text = error_text[:300] + '...'
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
