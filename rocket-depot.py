@@ -154,23 +154,21 @@ class WorkerThread(threading.Thread):
         threading.Thread.__init__(self)
         self.callback = callback
         self.cmdline = cmdline
+        WorkerThread.error_text = ''
+        WorkerThread.return_code = ''
 
     # Start the client and wait some seconds for errors
     def run(self):
-        global p
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
-        global error_text
-        error_text = ''
         start_time = time.time()
         while (p.poll() is None):
             # p.read is bad? check on this
-            error_text += p.stderr.read(8192)
+            WorkerThread.error_text += p.stderr.read(8192)
             time.sleep(1)
             if (time.time() - start_time) > 5:
               print "Timeout"
               break
-        global rc
-        rc = p.returncode
+        WorkerThread.return_code = p.returncode
         GLib.idle_add(self.callback)
 
 
@@ -404,8 +402,8 @@ e.g. "1024x768" or "80%"''')
             self.spinner.show()
             self.spinner.start()
             cmdline = run_program(self)
-            thread = WorkerThread(self.work_finished_cb, cmdline)
-            thread.start()
+            self.thread = WorkerThread(self.work_finished_cb, cmdline)
+            self.thread.start()
 
     # Triggered when a profile is selected via the Unity quicklist
     def on_unity_clicked(self, widget, entry, profile):
@@ -421,8 +419,10 @@ e.g. "1024x768" or "80%"''')
         self.spinner.stop()
         self.spinner.hide()
         self.connectbutton.show()
-        if rc != 0:
-            if len(error_text) > 300:
+        error_text = self.thread.error_text
+        return_code = self.thread.return_code
+        if return_code is not 0:
+            if len(WorkerThread.error_text) > 300:
                 error_text = error_text[:300] + '...'
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
                          error_text)
