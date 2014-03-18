@@ -17,3 +17,6 @@
 
 0.16 (March 6th, 2014)
   - Added support for extra command-line options.
+
+0.17 (March 18th, 2014)
+  - Improved connection error handling and responsiveness.
