@@ -148,6 +148,7 @@ def run_program(window):
     print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
     return cmdline
 
+
 # Thread for RDP client launch feedback in UI
 class WorkerThread(threading.Thread):
     def __init__(self, callback, cmdline):
@@ -155,20 +156,19 @@ class WorkerThread(threading.Thread):
         self.callback = callback
         self.cmdline = cmdline
         WorkerThread.error_text = ''
-        WorkerThread.return_code = ''
+        WorkerThread.return_code = 0
 
     # Start the client and wait some seconds for errors
     def run(self):
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
         start_time = time.time()
-        while (p.poll() is None):
-            # p.read is bad? check on this
-            WorkerThread.error_text += p.stderr.read(8192)
+        while p.poll() is None:
             time.sleep(1)
-            if (time.time() - start_time) > 5:
-              print "Timeout"
-              break
-        WorkerThread.return_code = p.returncode
+            if time.time() - start_time > 3:
+                break
+        if p.poll() is not None:
+            WorkerThread.error_text += p.communicate()[1]
+            WorkerThread.return_code += p.returncode
         GLib.idle_add(self.callback)
 
 
@@ -249,7 +249,7 @@ e.g. "1024x768" or "80%"''')
         self.clioptionsentry = Gtk.Entry()
         self.clioptionsentry.set_tooltip_text('''Extra CLI options''')
         self.clioptionsentry.connect("activate",
-                                   self.enter_connect, self.clioptionsentry)
+                                     self.enter_connect, self.clioptionsentry)
 
         # Combobox for program selection
         program_store = Gtk.ListStore(str)
@@ -402,8 +402,8 @@ e.g. "1024x768" or "80%"''')
             self.spinner.show()
             self.spinner.start()
             cmdline = run_program(self)
-            self.thread = WorkerThread(self.work_finished_cb, cmdline)
-            self.thread.start()
+            thread = WorkerThread(self.work_finished_cb, cmdline)
+            thread.start()
 
     # Triggered when a profile is selected via the Unity quicklist
     def on_unity_clicked(self, widget, entry, profile):
@@ -419,10 +419,11 @@ e.g. "1024x768" or "80%"''')
         self.spinner.stop()
         self.spinner.hide()
         self.connectbutton.show()
-        error_text = self.thread.error_text
-        return_code = self.thread.return_code
+        error_text = WorkerThread.error_text
+        return_code = WorkerThread.return_code
+        # Display error popup in UI if 300 characaters or less
         if return_code is not 0:
-            if len(WorkerThread.error_text) > 300:
+            if len(error_text) > 300:
                 error_text = error_text[:300] + '...'
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
                          error_text)
@@ -456,7 +457,8 @@ e.g. "1024x768" or "80%"''')
 
     # Triggered when the file menu is used
     def add_file_menu_actions(self, action_group):
-        action_filemenu = Gtk.Action(name="FileMenu", label="File", tooltip=None, stock_id=None)
+        action_filemenu = Gtk.Action(name="FileMenu", label="File",
+                                     tooltip=None, stock_id=None)
         action_group.add_action(action_filemenu)
         # Why do the functions here execute on startup if we add parameters?
         action_group.add_actions([("SaveCurrentConfig", None,
@@ -468,7 +470,8 @@ e.g. "1024x768" or "80%"''')
         action_group.add_actions([("DeleteCurrentConfig", None,
                                    "Delete Current Profile", None, None,
                                    self.delete_current_config)])
-        action_filequit = Gtk.Action(name="FileQuit", label=None, tooltip=None, stock_id=Gtk.STOCK_QUIT)
+        action_filequit = Gtk.Action(name="FileQuit", label=None, tooltip=None,
+                                     stock_id=Gtk.STOCK_QUIT)
         action_filequit.connect("activate", self.quit)
         action_group.add_action(action_filequit)
 
@@ -546,7 +549,8 @@ e.g. "1024x768" or "80%"''')
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
-        dialog = Gtk.MessageDialog(transient_for=self, flags=0, message_type=Gtk.MessageType.WARNING,
+        dialog = Gtk.MessageDialog(transient_for=self, flags=0,
+                                   message_type=Gtk.MessageType.WARNING,
                                    buttons=Gtk.ButtonsType.OK, text=title,
                                    title='Rocket Depot')
         dialog.format_secondary_text(message)
