@@ -98,7 +98,7 @@ def run_program(window):
             'fullscreen': '-f'
         },
         'xfreerdp': {
-            'stdopts': ['xfreerdp', '/cert-ignore', '-sec-nla', '+clipboard'],
+            'stdopts': ['xfreerdp', '+clipboard'],
             'host': '/v:',
             'user': '/u:',
             'geometry': '/size:',
@@ -160,6 +160,13 @@ class WorkerThread(threading.Thread):
 
     # Start the client and wait some seconds for errors
     def run(self):
+        terminal_check = ['/cert-ignore', '-sec-nla']
+        if (self.cmdline[0] == 'xfreerdp' and
+            all(x in self.cmdline for x in terminal_check)) or (self.cmdline[0] == 'rdesktop'):
+            print 'terminal not needed'
+        else:
+            print 'terminal needed'
+            #process = subprocess.Popen(['x-terminal-emulator', '-x', 'xfreerdp', '/u:user', '/v:host',], stdout=subprocess.PIPE)
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
         start_time = time.time()
         while p.poll() is None:
