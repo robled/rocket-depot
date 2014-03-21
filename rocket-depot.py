@@ -144,8 +144,6 @@ def run_program(window):
                   + '%s' % str.strip(options['host']))
     # Clean up params list to make it shell compliant
     cmdline = shlex.split(' '.join(params))
-    # Print the command line that we constructed to the terminal
-    print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
     return cmdline
 
 
@@ -160,13 +158,16 @@ class WorkerThread(threading.Thread):
 
     # Start the client and wait some seconds for errors
     def run(self):
+        # check for freerdp options that require the terminal for user input
         terminal_check = ['/cert-ignore', '-sec-nla']
         if (self.cmdline[0] == 'xfreerdp' and
             all(x in self.cmdline for x in terminal_check)) or (self.cmdline[0] == 'rdesktop'):
-            print 'terminal not needed'
+                pass
         else:
-            print 'terminal needed'
-            #process = subprocess.Popen(['x-terminal-emulator', '-x', 'xfreerdp', '/u:user', '/v:host',], stdout=subprocess.PIPE)
+            self.cmdline.insert(0, '-x')
+            self.cmdline.insert(0, 'x-terminal-emulator')
+        # Print the command line that we constructed to the terminal
+        print 'Command to execute: \n' + ' '.join(str(x) for x in self.cmdline)
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
         start_time = time.time()
         while p.poll() is None:
