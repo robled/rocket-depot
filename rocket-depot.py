@@ -71,7 +71,9 @@ def delete_config(section):
 def read_config(section):
     if os.path.exists(configfile):
         for opt in options:
-            if config.has_option(section, opt):
+            if not config.has_option(section, opt):
+                options[opt] = ''
+            else:
                 options[opt] = config.get(section, opt)
 
 
