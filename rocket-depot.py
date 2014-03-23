@@ -86,12 +86,27 @@ def list_profiles():
     return profiles_list
 
 
+# Check for given host in freerdp's known_hosts file before connecting
+def check_known_hosts(host):
+    known_hosts = '%s/.config/freerdp/known_hosts' % homedir
+    try:
+        with open(known_hosts, 'r') as f:
+            read_data = f.read()
+        match = re.search(host, read_data)
+        if match:
+            return True
+        else:
+            return False
+    except IOError:
+        return False
+
+
 # Run the selected RDP client - currently rdesktop or xfreerdp
 def run_program(window):
     # CLI parameters for each RDP client we support.  stdopts are always used.
     client_opts = {
         'rdesktop': {
-            'stdopts': ['rdesktop', '-ken-us', '-a16'],
+            'stdopts': ['rdesktop', '-a16'],
             'host': '',
             'user': '-u',
             'geometry': '-g',
@@ -146,7 +161,20 @@ def run_program(window):
                   + '%s' % str.strip(options['host']))
     # Clean up params list to make it shell compliant
     cmdline = shlex.split(' '.join(params))
+    terminal_needed(options['host'], cmdline)
     return cmdline
+
+
+# Open a terminal when freerdp needs user input
+def terminal_needed(host, cmdline):
+    def prepend_terminal():
+        cmdline.insert(0, '-x')
+        cmdline.insert(0, 'x-terminal-emulator')
+    if cmdline[0] == 'xfreerdp':
+        if '-sec-nla' not in cmdline:
+            prepend_terminal()
+        if '/cert-ignore' not in cmdline and check_known_hosts(host) is False:
+            prepend_terminal()
 
 
 # Thread for RDP client launch feedback in UI
@@ -160,14 +188,6 @@ class WorkerThread(threading.Thread):
 
     # Start the client and wait some seconds for errors
     def run(self):
-        # check for freerdp options that require the terminal for user input
-        terminal_check = ['/cert-ignore', '-sec-nla']
-        if (self.cmdline[0] == 'xfreerdp' and
-            all(x in self.cmdline for x in terminal_check)) or (self.cmdline[0] == 'rdesktop'):
-                pass
-        else:
-            self.cmdline.insert(0, '-x')
-            self.cmdline.insert(0, 'x-terminal-emulator')
         # Print the command line that we constructed to the terminal
         print 'Command to execute: \n' + ' '.join(str(x) for x in self.cmdline)
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
