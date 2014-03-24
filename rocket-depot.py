@@ -7,7 +7,7 @@ import subprocess
 import threading
 import time
 import ConfigParser
-from gi.repository import GLib, GObject, Gtk
+from gi.repository import GLib, Gtk
 # Import special features if we're running Ubuntu Unity
 if (os.environ.get('DESKTOP_SESSION') == 'ubuntu' or
         os.environ.get('DESKTOP_SESSION') == 'ubuntu-2d'):
@@ -33,7 +33,7 @@ options = {
     # set the default RDP user to the local user by default
     'user': os.environ.get('USER', 'user'),
     'geometry': '1024x768',
-    'program': 'rdesktop',
+    'program': 'xfreerdp',
     'homeshare': 'false',
     'grabkeyboard': 'false',
     'fullscreen': 'false',
@@ -282,21 +282,16 @@ e.g. "1024x768" or "80%"''')
         self.clioptionsentry.connect("activate",
                                      self.enter_connect, self.clioptionsentry)
 
-        # Combobox for program selection
-        program_store = Gtk.ListStore(str)
-        self.programs = {'rdesktop': 1, 'xfreerdp': 0}
-
-        # Adding our list of programs to the combobox.  We add these boolean
-        # values since the widget needs a boolean to define which selection is
-        # active
-        for key in self.programs:
-            program_store.append([key])
-        self.program_combo = Gtk.ComboBox.new_with_model(program_store)
-        self.program_combo.set_tooltip_text('List of supported RDP clients')
-        self.program_combo.connect("changed", self.on_program_combo_changed)
-        self.program_renderer_text = Gtk.CellRendererText()
-        self.program_combo.pack_start(self.program_renderer_text, True)
-        self.program_combo.add_attribute(self.program_renderer_text, "text", 0)
+        # Radio button for program selection
+        self.xfreerdpbutton = Gtk.RadioButton.new_with_label_from_widget(None, "FreeRDP")
+        self.xfreerdpbutton.connect("toggled", self.on_radio_button_toggled,
+                                    "xfreerdp")
+        self.rdesktopbutton = Gtk.RadioButton.new_from_widget(self.xfreerdpbutton)
+        self.rdesktopbutton.set_label("rdesktop")
+        self.rdesktopbutton.connect("toggled", self.on_radio_button_toggled,
+                                    "rdesktop")
+        self.xfreerdpbutton.set_tooltip_text('Choose a supported RDP client')
+        self.rdesktopbutton.set_tooltip_text('Choose a supported RDP client')
 
         # Checkbox for sharing our home directory
         self.homedirbutton = Gtk.CheckButton(label="Share Home Dir")
@@ -338,6 +333,8 @@ e.g. "1024x768" or "80%"''')
         grid.attach(geometrylabel, 0, 16, 4, 4)
         grid.attach(clioptionslabel, 0, 20, 4, 4)
         grid.attach(programlabel, 0, 24, 4, 4)
+        grid.attach(self.homedirbutton, 0, 28, 4, 4)
+        grid.attach(quitbutton, 0, 32, 4, 4)
         grid.attach_next_to(self.profiles_combo, profileslabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.hostentry, hostlabel,
@@ -348,14 +345,14 @@ e.g. "1024x768" or "80%"''')
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.clioptionsentry, clioptionslabel,
                             Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(self.program_combo, programlabel,
-                            Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach(self.homedirbutton, 0, 28, 4, 4)
+        grid.attach_next_to(self.xfreerdpbutton, programlabel,
+                            Gtk.PositionType.RIGHT, 4, 4)
+        grid.attach_next_to(self.rdesktopbutton, self.xfreerdpbutton,
+                            Gtk.PositionType.RIGHT, 4, 4)
         grid.attach_next_to(self.grabkeyboardbutton, self.homedirbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach_next_to(self.fullscreenbutton, self.grabkeyboardbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
-        grid.attach(quitbutton, 0, 32, 4, 4)
         grid.attach_next_to(self.connectbutton, quitbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.spinner, quitbutton,
@@ -469,14 +466,6 @@ e.g. "1024x768" or "80%"''')
                 self.load_settings()
         self.profilename = text
 
-    # Triggered when the combobox is clicked.  We set the selected RDP client.
-    def on_program_combo_changed(self, combo):
-        tree_iter = combo.get_active_iter()
-        if tree_iter is not None:
-            model = combo.get_model()
-            program = model[tree_iter][0]
-        options['program'] = program
-
     # Triggered when the checkboxes are toggled
     def on_button_toggled(self, button, name):
         if button.get_active():
@@ -485,6 +474,12 @@ e.g. "1024x768" or "80%"''')
         else:
             state = 'false'
             options[name] = state
+
+    # Triggered when the program radio buttons are toggled
+    def on_radio_button_toggled(self, button, name):
+        if button.get_active():
+            state = 'true'
+            options['program'] = name
 
     # Triggered when the file menu is used
     def add_file_menu_actions(self, action_group):
@@ -605,7 +600,10 @@ e.g. "1024x768" or "80%"''')
         self.userentry.set_text(options['user'])
         self.geometryentry.set_text(options['geometry'])
         self.clioptionsentry.set_text(options['clioptions'])
-        self.program_combo.set_active(self.programs[options['program']])
+        if options['program'] == 'xfreerdp':
+            self.xfreerdpbutton.set_active(True)
+        if options['program'] == 'rdesktop':
+            self.rdesktopbutton.set_active(True)
         if options['homeshare'] == 'true':
             self.homedirbutton.set_active(True)
         else:
