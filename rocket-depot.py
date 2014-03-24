@@ -7,7 +7,7 @@ import subprocess
 import threading
 import time
 import ConfigParser
-from gi.repository import GLib, Gtk
+from gi.repository import GLib, GdkPixbuf, Gtk
 # Import special features if we're running Ubuntu Unity
 if (os.environ.get('DESKTOP_SESSION') == 'ubuntu' or
         os.environ.get('DESKTOP_SESSION') == 'ubuntu-2d'):
@@ -591,6 +591,7 @@ e.g. "1024x768" or "80%"''')
         about.set_copyright("2014 David Roble")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
+        about.set_logo(GdkPixbuf.Pixbuf.new_from_file("/usr/share/icons/hicolor/scalable/apps/rocket-depot.svg"))
         about.run()
         about.destroy()
 
