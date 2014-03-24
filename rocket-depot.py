@@ -168,8 +168,9 @@ def run_program(window):
 # Open a terminal when freerdp needs user input
 def terminal_needed(host, cmdline):
     def prepend_terminal():
-        cmdline.insert(0, '-x')
-        cmdline.insert(0, 'x-terminal-emulator')
+        if cmdline[0] != 'x-terminal-emulator':
+            cmdline.insert(0, '-x')
+            cmdline.insert(0, 'x-terminal-emulator')
     if cmdline[0] == 'xfreerdp':
         if '-sec-nla' not in cmdline:
             prepend_terminal()
