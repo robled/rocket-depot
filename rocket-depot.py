@@ -449,8 +449,8 @@ e.g. "1024x768" or "80%"''')
         self.connectbutton.show()
         error_text = WorkerThread.error_text
         return_code = WorkerThread.return_code
-        # Display error popup in UI if 300 characaters or less
-        if return_code is not 0:
+        # return code 62 is a benign error code from rdesktop
+        if return_code is not 0 and return_code is not 62:
             if len(error_text) > 300:
                 error_text = error_text[:300] + '...'
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
