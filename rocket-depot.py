@@ -167,10 +167,11 @@ def run_program(window):
 
 # Open a terminal when freerdp needs user input
 def terminal_needed(host, cmdline):
+    terminal_args = ['xterm', '-hold', '-e']
     def prepend_terminal():
-        if cmdline[0] != 'x-terminal-emulator':
-            cmdline.insert(0, '-x')
-            cmdline.insert(0, 'x-terminal-emulator')
+        if cmdline[0] != 'xterm':
+            for x in reversed(terminal_args):
+                cmdline.insert(0, x)
     if cmdline[0] == 'xfreerdp':
         if '-sec-nla' not in cmdline:
             prepend_terminal()
@@ -450,7 +451,9 @@ e.g. "1024x768" or "80%"''')
         error_text = WorkerThread.error_text
         return_code = WorkerThread.return_code
         # return code 62 is a benign error code from rdesktop
+        # return code 62 is not used by xfreerdp
         if return_code is not 0 and return_code is not 62:
+            # discard extra data from long error messages
             if len(error_text) > 300:
                 error_text = error_text[:300] + '...'
             self.on_warn(None, 'Connection Error', '%s: \n' % client +
