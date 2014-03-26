@@ -20,3 +20,7 @@
 
 0.17 (March 18th, 2014)
   - Improved connection error handling and responsiveness.
+
+0.18 (March 23rd, 2014)
+  - Better handling for FreeRDP security options.
+  - Bugfix for handling new config file options.
