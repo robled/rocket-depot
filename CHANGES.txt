@@ -27,3 +27,6 @@
 
 0.19 (March 27th, 2014)
   - Added option to run RDP client in terminal.
+
+0.20 (March 27th, 2014)
+  - Packaging fixes.
