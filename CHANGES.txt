@@ -24,3 +24,6 @@
 0.18 (March 23rd, 2014)
   - Better handling for FreeRDP security options.
   - Bugfix for handling new config file options.
+
+0.19 (March 27th, 2014)
+  - Added option to run RDP client in terminal.
