@@ -37,7 +37,8 @@ options = {
     'homeshare': 'false',
     'grabkeyboard': 'false',
     'fullscreen': 'false',
-    'clioptions': ''
+    'clioptions': '',
+    'terminal': 'false'
 }
 
 
@@ -177,6 +178,8 @@ def terminal_needed(host, cmdline):
             prepend_terminal()
         if '/cert-ignore' not in cmdline and check_known_hosts(host) is False:
             prepend_terminal()
+    if options['terminal'] == 'true':
+        prepend_terminal()
 
 
 # Thread for RDP client launch feedback in UI
@@ -315,9 +318,12 @@ e.g. "1024x768" or "80%"''')
         self.fullscreenbutton.connect("toggled", self.on_button_toggled,
                                       "fullscreen")
 
-        # Quit button
-        quitbutton = Gtk.Button(label="Quit")
-        quitbutton.connect("clicked", self.quit)
+        # Checkbox for terminal
+        self.terminalbutton = Gtk.CheckButton(label="Terminal")
+        self.terminalbutton.set_tooltip_text('''Run RDP client from terminal.
+Useful for diagnosing connection problems''')
+        self.terminalbutton.connect("toggled", self.on_button_toggled,
+                                    "terminal")
 
         # Progress spinner
         self.spinner = Gtk.Spinner()
@@ -335,7 +341,7 @@ e.g. "1024x768" or "80%"''')
         grid.attach(clioptionslabel, 0, 20, 4, 4)
         grid.attach(programlabel, 0, 24, 4, 4)
         grid.attach(self.homedirbutton, 0, 28, 4, 4)
-        grid.attach(quitbutton, 0, 32, 4, 4)
+        grid.attach(self.terminalbutton, 0, 32, 4, 4)
         grid.attach_next_to(self.profiles_combo, profileslabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.hostentry, hostlabel,
@@ -354,9 +360,9 @@ e.g. "1024x768" or "80%"''')
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach_next_to(self.fullscreenbutton, self.grabkeyboardbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
-        grid.attach_next_to(self.connectbutton, quitbutton,
+        grid.attach_next_to(self.connectbutton, self.terminalbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(self.spinner, quitbutton,
+        grid.attach_next_to(self.spinner, self.terminalbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
         # Load the default profile on startup
@@ -590,7 +596,7 @@ e.g. "1024x768" or "80%"''')
     def on_about(self, widget):
         about = Gtk.AboutDialog()
         about.set_program_name("Rocket Depot")
-        about.set_version("0.18")
+        about.set_version("0.19")
         about.set_copyright("2014 David Roble")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
