@@ -170,7 +170,7 @@ def run_program(window):
 def terminal_needed(host, cmdline):
     terminal_args = ['xterm', '-hold', '-e']
     def prepend_terminal():
-        if cmdline[0] != 'xterm':
+        if cmdline[0] != terminal_args[0]:
             for x in reversed(terminal_args):
                 cmdline.insert(0, x)
     if cmdline[0] == 'xfreerdp':
