@@ -469,6 +469,7 @@ Useful for diagnosing connection problems''')
     # from the config file.
     def on_profiles_combo_changed(self, combo):
         text = combo.get_active_text()
+        # Should we really iterate over the list of profiles here?
         for profile in list_profiles():
             if text == profile:
                 read_config(text)
@@ -626,6 +627,10 @@ Useful for diagnosing connection problems''')
             self.fullscreenbutton.set_active(True)
         else:
             self.fullscreenbutton.set_active(False)
+        if options['terminal'] == 'true':
+            self.terminalbutton.set_active(True)
+        else:
+            self.terminalbutton.set_active(False)
 
 
 def _main():
