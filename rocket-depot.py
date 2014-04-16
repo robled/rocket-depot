@@ -6,6 +6,7 @@ import shlex
 import subprocess
 import threading
 import time
+import webbrowser
 import ConfigParser
 from gi.repository import GLib, GdkPixbuf, Gtk
 # Import special features if we're running Ubuntu Unity
@@ -231,6 +232,8 @@ class MainWindow(Gtk.Window):
               <menuitem action='FileQuit' />
             </menu>
             <menu action='Help'>
+              <menuitem action='FreeRDPDocs'/>
+              <menuitem action='rdesktopDocs'/>
               <menuitem action='About'/>
             </menu>
           </menubar>
@@ -519,8 +522,9 @@ Useful for diagnosing connection problems''')
     def add_help_menu_actions(self, action_group):
         action_group.add_actions([
             ("Help", None, "Help"),
-            ("About", None, "About", None, None,
-             self.on_menu_help),
+            ("About", None, "About", None, None, self.on_menu_help_about),
+            ("FreeRDPDocs", None, "FreeRDP Web Documentation", None, None, self.on_menu_xfreerdp_help),
+            ("rdesktopDocs", None, "rdesktop Web Documentation", None, None, self.on_menu_rdesktop_help),
         ])
 
     # Needed for the menu bar
@@ -579,8 +583,18 @@ Useful for diagnosing connection problems''')
         Gtk.main_quit()
 
     # When the help button is clicked on the menu bar
-    def on_menu_help(self, widget):
+    def on_menu_help_about(self, widget):
         self.on_about(widget)
+
+    # When the FreeRDP help button is clicked on the menu bar
+    def on_menu_xfreerdp_help(self, widget):
+        url = "https://github.com/FreeRDP/FreeRDP/wiki/CommandLineInterface"
+        webbrowser.open_new_tab(url)
+
+    # When the rdesktop help button is clicked on the menu bar
+    def on_menu_rdesktop_help(self, widget):
+        url = "http://linux.die.net/man/1/rdesktop"
+        webbrowser.open_new_tab(url)
 
     # Grab all textbox input
     def grab_textboxes(self):
