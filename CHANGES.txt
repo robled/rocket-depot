@@ -30,3 +30,7 @@
 
 0.20 (March 27th, 2014)
   - Packaging fixes.
+
+0.21 (April 16th, 2014)
+  - Bugfix for terminal selection.
+  - Added help links for RDP clients.
