@@ -8,7 +8,7 @@ shutil.copyfile('rocket-depot.py', 'rocket-depot')
 
 setup(
     name = 'rocket-depot',
-    version = '0.20',
+    version = '0.21',
     scripts = ['rocket-depot'],
 
     # metadata for upload to PyPI
