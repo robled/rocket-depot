@@ -449,7 +449,7 @@ Useful for diagnosing connection problems''')
 
     # Triggered when a profile is selected via the Unity quicklist
     def on_unity_clicked(self, widget, entry, profile):
-        read_config(profile)
+        self.rd.read_config(profile)
         self.start_thread()
 
     # Trigged when we press 'Enter' or the 'Connect' button
