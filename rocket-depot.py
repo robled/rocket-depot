@@ -17,169 +17,172 @@ else:
     unity = False
 
 
-# Create config dir
-def create_config_dir():
-    configdir = '%s/.config/rocket-depot' % homedir
-    if not os.path.exists(configdir):
-        try:
-            os.mkdir(configdir, 0700)
-        except OSError:
-            print 'Error:  Unable to create config directory.'
-
-
-# Default options.  Overridden by config file.
-options = {
-    'host': 'host.example.com',
-    # set the default RDP user to the local user by default
-    'user': os.environ.get('USER', 'user'),
-    'geometry': '1024x768',
-    'program': 'xfreerdp',
-    'homeshare': 'false',
-    'grabkeyboard': 'false',
-    'fullscreen': 'false',
-    'clioptions': '',
-    'terminal': 'false'
-}
-
-
-# Open the config file for writing
-def write_config():
-    with open(configfile, 'wb') as f:
-        config.write(f)
-
-
-# Save options to the config file
-def save_config(section, window=None):
-    # if the UI is running, let's see what's in the textboxes
-    if window:
-        window.grab_textboxes()
-    # add the new section if it doesn't exist
-    if not config.has_section(section):
-        config.add_section(section)
-    # Set all selected options
-    for opt in options:
-        config.set(section, opt, options[opt])
-    write_config()
-
-
-# Delete a section from the config file
-def delete_config(section):
-    config.remove_section(section)
-    write_config()
-
-
-# Set options based on section in config file
-def read_config(section):
-    if os.path.exists(configfile):
-        for opt in options:
-            if not config.has_option(section, opt):
-                options[opt] = ''
-            else:
-                options[opt] = config.get(section, opt)
-
-
-# Make a list of all profiles in config file.  Sort the order alphabetically,
-# except special 'defaults' profile always comes first
-def list_profiles():
-    profiles_list = sorted(config.sections())
-    defaults_index = profiles_list.index('defaults')
-    profiles_list.insert(0, profiles_list.pop(defaults_index))
-    return profiles_list
-
-
-# Check for given host in freerdp's known_hosts file before connecting
-def check_known_hosts(host):
-    known_hosts = '%s/.config/freerdp/known_hosts' % homedir
-    try:
-        with open(known_hosts, 'r') as f:
-            read_data = f.read()
-        match = re.search(host, read_data)
-        if match:
-            return True
-        else:
-            return False
-    except IOError:
-        return False
-
-
-# Run the selected RDP client - currently rdesktop or xfreerdp
-def run_program(window):
-    # CLI parameters for each RDP client we support.  stdopts are always used.
-    client_opts = {
-        'rdesktop': {
-            'stdopts': ['rdesktop', '-a16'],
-            'host': '',
-            'user': '-u',
-            'geometry': '-g',
-            'homeshare': '-rdisk:home=' + homedir,
-            'grabkeyboard': '-K',
-            'fullscreen': '-f'
-        },
-        'xfreerdp': {
-            'stdopts': ['xfreerdp', '+clipboard'],
-            'host': '/v:',
-            'user': '/u:',
-            'geometry': '/size:',
-            'homeshare': '/drive:home,' + homedir,
-            'grabkeyboard': '-grab-keyboard',
-            'fullscreen': '/f'
+class RocketDepot:
+    def __init__(self):
+        # Default options.  Overridden by config file.
+        self.options = {
+            'host': 'host.example.com',
+            # set the default RDP user to the local user by default
+            'user': os.environ.get('USER', 'user'),
+            'geometry': '1024x768',
+            'program': 'xfreerdp',
+            'homeshare': 'false',
+            'grabkeyboard': 'false',
+            'fullscreen': 'false',
+            'clioptions': '',
+            'terminal': 'false'
         }
-    }
+        # Local user homedir and config file
+        self.homedir = os.environ['HOME']
+        self.create_config_dir()
+        # Our config dotfile
+        self.configfile = '%s/.config/rocket-depot/config.ini' % self.homedir
+        self.config = ConfigParser.RawConfigParser()
+        self.config.read(self.configfile)
+        self.read_config('defaults')
+        self.save_config('defaults')
+        self.mw = MainWindow(self)
 
-    # This makes the next bit a little cleaner name-wise
-    global client
-    client = options['program']
-    # List of commandline paramenters for our RDP client
-    params = []
-    # Add standard options to the parameter list
-    for x in client_opts[client]['stdopts']:
-        params.append(x)
-    # Add specified options to the parameter list
-    if options['user'] != '':
-        # We put quotes around the username so that the domain\username format
-        # doesn't get escaped
-        slashuser = "'%s'" % str.strip(options['user'])
-        params.append(client_opts[client]['user'] + slashuser)
-    # Detect percent symbol in geometry field.  If it exists we do math to
-    # use the correct resolution for the active monitor.  Otherwise we submit
-    # a given resolution such as 1024x768 to the list of parameters.
-    if options['geometry'] != '':
-        geo = client_opts[client]['geometry']
-        if options['geometry'].find('%') == -1:
-            params.append(geo + '%s' % str.strip(options['geometry']))
-        else:
-            params.append(geo + window.geo_percent(options['geometry']))
-    if options['fullscreen'] == 'true':
-        params.append(client_opts[client]['fullscreen'])
-    if options['grabkeyboard'] == 'false':
-        params.append(client_opts[client]['grabkeyboard'])
-    if options['homeshare'] == 'true':
-        params.append(client_opts[client]['homeshare'])
-    if options['clioptions'] != '':
-        params.append(options['clioptions'])
-    # Hostname goes last in the list of parameters
-    params.append(client_opts[client]['host']
-                  + '%s' % str.strip(options['host']))
-    # Clean up params list to make it shell compliant
-    cmdline = shlex.split(' '.join(params))
-    terminal_needed(options['host'], cmdline)
-    return cmdline
+    # Create config dir
+    def create_config_dir(self):
+        configdir = '%s/.config/rocket-depot' % self.homedir
+        if not os.path.exists(configdir):
+            try:
+                os.mkdir(configdir, 0700)
+            except OSError:
+                print 'Error:  Unable to create config directory.'
 
+    # Open the config file for writing
+    def write_config(self):
+        with open(self.configfile, 'wb') as f:
+            self.config.write(f)
 
-# Open a terminal when freerdp needs user input
-def terminal_needed(host, cmdline):
-    terminal_args = ['xterm', '-hold', '-e']
-    def prepend_terminal():
-        if cmdline[0] != terminal_args[0]:
-            for x in reversed(terminal_args):
-                cmdline.insert(0, x)
-    if cmdline[0] == 'xfreerdp':
-        if '-sec-nla' not in cmdline:
+    # Save options to the config file
+    def save_config(self, section):
+        # add the new section if it doesn't exist
+        if not self.config.has_section(section):
+            self.config.add_section(section)
+        # Set all selected options
+        for opt in self.options:
+            self.config.set(section, opt, self.options[opt])
+        self.write_config()
+
+    # Delete a section from the config file
+    def delete_config(self, section):
+        self.config.remove_section(section)
+        self.write_config()
+
+    # Set options based on section in config file
+    def read_config(self, section):
+        if os.path.exists(self.configfile):
+            for opt in self.options:
+                if not self.config.has_option(section, opt):
+                    self.options[opt] = ''
+                else:
+                    self.options[opt] = self.config.get(section, opt)
+
+    # Make a list of all profiles in config file.  Sort the order
+    # alphabetically, except special 'defaults' profile always comes first
+    def list_profiles(self):
+        profiles_list = sorted(self.config.sections())
+        defaults_index = profiles_list.index('defaults')
+        profiles_list.insert(0, profiles_list.pop(defaults_index))
+        return profiles_list
+
+    # Check for given host in freerdp's known_hosts file before connecting
+    def check_known_hosts(self, host):
+        known_hosts = '%s/.config/freerdp/known_hosts' % self.homedir
+        try:
+            with open(known_hosts, 'r') as f:
+                read_data = f.read()
+            match = re.search(host, read_data)
+            if match:
+                return True
+            else:
+                return False
+        except IOError:
+            return False
+
+    # Run the selected RDP client - currently rdesktop or xfreerdp
+    def run_program(self):
+        # CLI parameters for each RDP client we support.  stdopts are always
+        # used.
+        client_opts = {
+            'rdesktop': {
+                'stdopts': ['rdesktop', '-a16'],
+                'host': '',
+                'user': '-u',
+                'geometry': '-g',
+                'homeshare': '-rdisk:home=' + self.homedir,
+                'grabkeyboard': '-K',
+                'fullscreen': '-f'
+            },
+            'xfreerdp': {
+                'stdopts': ['xfreerdp', '+clipboard'],
+                'host': '/v:',
+                'user': '/u:',
+                'geometry': '/size:',
+                'homeshare': '/drive:home,' + self.homedir,
+                'grabkeyboard': '-grab-keyboard',
+                'fullscreen': '/f'
+            }
+        }
+
+        # This makes the next bit a little cleaner name-wise
+        client = self.options['program']
+        # List of commandline paramenters for our RDP client
+        params = []
+        # Add standard options to the parameter list
+        for x in client_opts[client]['stdopts']:
+            params.append(x)
+        # Add specified options to the parameter list
+        if self.options['user'] != '':
+            # We put quotes around the username so that the domain\username
+            # format doesn't get escaped
+            slashuser = "'%s'" % str.strip(self.options['user'])
+            params.append(client_opts[client]['user'] + slashuser)
+        # Detect percent symbol in geometry field.  If it exists we do math to
+        # use the correct resolution for the active monitor.  Otherwise we
+        # submit a given resolution such as 1024x768 to the list of parameters.
+        if self.options['geometry'] != '':
+            geo = client_opts[client]['geometry']
+            if self.options['geometry'].find('%') == -1:
+                params.append(geo
+                              + '%s' % str.strip(self.options['geometry']))
+            else:
+                params.append(geo
+                              + self.mw.geo_percent(self.options['geometry']))
+        if self.options['fullscreen'] == 'true':
+            params.append(client_opts[client]['fullscreen'])
+        if self.options['grabkeyboard'] == 'false':
+            params.append(client_opts[client]['grabkeyboard'])
+        if self.options['homeshare'] == 'true':
+            params.append(client_opts[client]['homeshare'])
+        if self.options['clioptions'] != '':
+            params.append(self.options['clioptions'])
+        # Hostname goes last in the list of parameters
+        params.append(client_opts[client]['host']
+                      + '%s' % str.strip(self.options['host']))
+        # Clean up params list to make it shell compliant
+        cmdline = shlex.split(' '.join(params))
+        self.terminal_needed(self.options['host'], cmdline)
+        return cmdline
+
+    # Open a terminal when freerdp needs user input
+    def terminal_needed(self, host, cmdline):
+        terminal_args = ['xterm', '-hold', '-e']
+
+        def prepend_terminal():
+            if cmdline[0] != terminal_args[0]:
+                for x in reversed(terminal_args):
+                    cmdline.insert(0, x)
+        if cmdline[0] == 'xfreerdp':
+            if '-sec-nla' not in cmdline:
+                prepend_terminal()
+            if '/cert-ignore' not in cmdline and self.check_known_hosts(host) is False:
+                prepend_terminal()
+        if self.options['terminal'] == 'true':
             prepend_terminal()
-        if '/cert-ignore' not in cmdline and check_known_hosts(host) is False:
-            prepend_terminal()
-    if options['terminal'] == 'true':
-        prepend_terminal()
 
 
 # Thread for RDP client launch feedback in UI
@@ -209,8 +212,9 @@ class WorkerThread(threading.Thread):
 
 # GUI stuff
 class MainWindow(Gtk.Window):
-    def __init__(self):
+    def __init__(self, rd):
         # Window properties
+        self.rd = rd
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(8)
@@ -393,13 +397,13 @@ Useful for diagnosing connection problems''')
     # Each section in the config file gets an entry in the profiles combobox
     def populate_profiles_combobox(self):
         self.profiles_combo.get_model().clear()
-        for profile in list_profiles():
+        for profile in self.rd.list_profiles():
             if profile != 'defaults':
                 self.profiles_combo.append_text(profile)
 
     # Each section in the config file gets an entry in the Unity quicklist
     def populate_unity_quicklist(self):
-        for profile in list_profiles():
+        for profile in self.rd.list_profiles():
             self.update_unity_quicklist(profile)
 
     # Create the Unity quicklist and populate it with our profiles
@@ -430,13 +434,13 @@ Useful for diagnosing connection problems''')
 
     def start_thread(self):
         # Throw an error if the required host field is empty
-        if not options['host']:
+        if not self.rd.options['host']:
             self.on_warn(None, 'No Host', 'No Host or IP Address Given')
         else:
             self.connectbutton.hide()
             self.spinner.show()
             self.spinner.start()
-            cmdline = run_program(self)
+            cmdline = self.rd.run_program()
             thread = WorkerThread(self.work_finished_cb, cmdline)
             thread.start()
 
@@ -462,17 +466,17 @@ Useful for diagnosing connection problems''')
             # discard extra data from long error messages
             if len(error_text) > 300:
                 error_text = error_text[:300] + '...'
-            self.on_warn(None, 'Connection Error', '%s: \n' % client +
-                         error_text)
+            self.on_warn(None, 'Connection Error', '%s: \n'
+                         % self.rd.options['program'] + error_text)
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
     def on_profiles_combo_changed(self, combo):
         text = combo.get_active_text()
         # Should we really iterate over the list of profiles here?
-        for profile in list_profiles():
+        for profile in self.rd.list_profiles():
             if text == profile:
-                read_config(text)
+                self.rd.read_config(text)
                 self.load_settings()
         self.profilename = text
 
@@ -480,16 +484,16 @@ Useful for diagnosing connection problems''')
     def on_button_toggled(self, button, name):
         if button.get_active():
             state = 'true'
-            options[name] = state
+            self.rd.options[name] = state
         else:
             state = 'false'
-            options[name] = state
+            self.rd.options[name] = state
 
     # Triggered when the program radio buttons are toggled
     def on_radio_button_toggled(self, button, name):
         if button.get_active():
             state = 'true'
-            options['program'] = name
+            self.rd.options['program'] = name
 
     # Triggered when the file menu is used
     def add_file_menu_actions(self, action_group):
@@ -535,7 +539,8 @@ Useful for diagnosing connection problems''')
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
-            save_config(self.profilename, self)
+            self.grab_textboxes()
+            self.rd.save_config(self.profilename)
             self.populate_profiles_combobox()
             if unity is True:
                 self.clean_unity_quicklist()
@@ -546,9 +551,9 @@ Useful for diagnosing connection problems''')
             self.on_warn(None, 'Select a Profile',
                          'Please select a profile to delete.')
         else:
-            delete_config(self.profilename)
+            self.rd.delete_config(self.profilename)
             # reload the default config
-            read_config('defaults')
+            self.rd.read_config('defaults')
             self.load_settings()
             # Set profiles combobox to have no active item
             self.profiles_combo.set_active(-1)
@@ -566,7 +571,8 @@ Useful for diagnosing connection problems''')
 
     # When the save config button is clicked on the menu bar
     def save_current_config_as_default(self, widget):
-        save_config('defaults', self)
+        self.grab_textboxes()
+        self.rd.save_config('defaults')
 
     # When the quit button is clicked on the menu bar
     def quit(self, widget):
@@ -578,10 +584,10 @@ Useful for diagnosing connection problems''')
 
     # Grab all textbox input
     def grab_textboxes(self):
-        options['host'] = self.hostentry.get_text()
-        options['user'] = self.userentry.get_text()
-        options['geometry'] = self.geometryentry.get_text()
-        options['clioptions'] = self.clioptionsentry.get_text()
+        self.rd.options['host'] = self.hostentry.get_text()
+        self.rd.options['user'] = self.userentry.get_text()
+        self.rd.options['geometry'] = self.geometryentry.get_text()
+        self.rd.options['clioptions'] = self.clioptionsentry.get_text()
 
     # Generic warning dialog
     def on_warn(self, widget, title, message):
@@ -607,49 +613,36 @@ Useful for diagnosing connection problems''')
 
     # Load all settings
     def load_settings(self):
-        self.hostentry.set_text(options['host'])
-        self.userentry.set_text(options['user'])
-        self.geometryentry.set_text(options['geometry'])
-        self.clioptionsentry.set_text(options['clioptions'])
-        if options['program'] == 'xfreerdp':
+        self.hostentry.set_text(self.rd.options['host'])
+        self.userentry.set_text(self.rd.options['user'])
+        self.geometryentry.set_text(self.rd.options['geometry'])
+        self.clioptionsentry.set_text(self.rd.options['clioptions'])
+        if self.rd.options['program'] == 'xfreerdp':
             self.xfreerdpbutton.set_active(True)
-        if options['program'] == 'rdesktop':
+        if self.rd.options['program'] == 'rdesktop':
             self.rdesktopbutton.set_active(True)
-        if options['homeshare'] == 'true':
+        if self.rd.options['homeshare'] == 'true':
             self.homedirbutton.set_active(True)
         else:
             self.homedirbutton.set_active(False)
-        if options['grabkeyboard'] == 'true':
+        if self.rd.options['grabkeyboard'] == 'true':
             self.grabkeyboardbutton.set_active(True)
         else:
             self.grabkeyboardbutton.set_active(False)
-        if options['fullscreen'] == 'true':
+        if self.rd.options['fullscreen'] == 'true':
             self.fullscreenbutton.set_active(True)
         else:
             self.fullscreenbutton.set_active(False)
-        if options['terminal'] == 'true':
+        if self.rd.options['terminal'] == 'true':
             self.terminalbutton.set_active(True)
         else:
             self.terminalbutton.set_active(False)
 
 
 def _main():
-    # Local user homedir and config file
-    global homedir
-    global configfile
-    global config
-    homedir = os.environ['HOME']
-    create_config_dir()
-    # Our config dotfile
-    configfile = '%s/.config/rocket-depot/config.ini' % homedir
-    config = ConfigParser.RawConfigParser()
     # Read the default profile and then save it if it doesn't already exist
-    config.read(configfile)
-    read_config('defaults')
-    save_config('defaults')
-    # Make the GUI!
-    global window
-    window = MainWindow()
+    rocket_depot = RocketDepot()
+    window = MainWindow(rocket_depot)
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
     # Hide the progress spinner until it is needed
