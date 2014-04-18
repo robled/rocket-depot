@@ -34,3 +34,7 @@
 0.21 (April 16th, 2014)
   - Bugfix for terminal selection.
   - Added help links for RDP clients.
+
+0.22 (April 18th, 2014)
+  - Bugfix for Unity quicklist.
+  - Added keyboard shortcuts.
