@@ -505,18 +505,17 @@ Useful for diagnosing connection problems''')
         action_group.add_action(action_filemenu)
         # Why do the functions here execute on startup if we add parameters?
         action_group.add_actions([("SaveCurrentConfig", None,
-                                   "Save Current Profile", None, None,
+                                   "Save Current Profile", "<control>S", None,
                                    self.save_current_config)])
         action_group.add_actions([("SaveCurrentConfigAsDefault", None,
-                                   "Save Current Profile as Default", None,
+                                   "Save Current Profile as Default", "<control>D",
                                    None, self.save_current_config_as_default)])
         action_group.add_actions([("DeleteCurrentConfig", None,
-                                   "Delete Current Profile", None, None,
+                                   "Delete Current Profile", "<control><shift>S", None,
                                    self.delete_current_config)])
-        action_filequit = Gtk.Action(name="FileQuit", label=None, tooltip=None,
-                                     stock_id=Gtk.STOCK_QUIT)
-        action_filequit.connect("activate", self.quit)
-        action_group.add_action(action_filequit)
+        action_group.add_actions([("FileQuit", None,
+                                   "Quit", "<control>Q", None,
+                                   self.quit)])
 
     # Triggered when the help menu is used
     def add_help_menu_actions(self, action_group):
