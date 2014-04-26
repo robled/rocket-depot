@@ -463,9 +463,12 @@ Useful for diagnosing connection problems''')
         self.connectbutton.show()
         error_text = WorkerThread.error_text
         return_code = WorkerThread.return_code
+        return_code_ignore = [62, 255]
         # return code 62 is a benign error code from rdesktop
         # return code 62 is not used by xfreerdp
-        if return_code is not 0 and return_code is not 62:
+        # return code 255 is a benign error code from xfreerdp
+        # return code 255 is not used by rdesktop
+        if return_code is not 0 and return_code not in return_code_ignore:
             # discard extra data from long error messages
             if len(error_text) > 300:
                 error_text = error_text[:300] + '...'
