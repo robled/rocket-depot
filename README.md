@@ -4,7 +4,9 @@ support for connection profiles.  It runs on Linux desktops using GTK and
 takes advantage of modern desktop environment features such as Unity
 Quicklists.
 
-![screenshot.png](screenshot.png "Screenshot")
+![screenshot-main.png](screenshot-main.png "Screenshot")
+
+![screenshot-quicklist.png](screenshot-quicklist.png "Screenshot")
 
 #### Installation
 
