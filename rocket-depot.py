@@ -254,29 +254,24 @@ class MainWindow(Gtk.Window):
         self.add(grid)
 
         # Labels for text entry fields and comboboxes
-        profileslabel = Gtk.Label(label="Profile")
         hostlabel = Gtk.Label(label="Host")
         userlabel = Gtk.Label(label="Username")
         geometrylabel = Gtk.Label(label="Geometry")
         clioptionslabel = Gtk.Label(label="CLI Options")
         programlabel = Gtk.Label(label="RDP Client")
 
-        # Profiles combobox
-        self.profiles_combo = Gtk.ComboBoxText.new_with_entry()
-        self.profiles_combo.set_tooltip_text('List of saved connection '
-                                             'profiles')
-        self.populate_profiles_combobox()
-        self.profiles_combo.connect("changed", self.on_profiles_combo_changed)
-        # If an existing profile name has been typed into the profiles
+        # Host combobox
+        self.host_combo = Gtk.ComboBoxText.new_with_entry()
+        self.host_combo.set_tooltip_text('Enter hostname/IP or list saved hosts')
+        self.populate_host_combobox()
+        self.host_combo.connect("changed", self.on_host_combo_changed)
+        # If an existing profile name has been typed into the host
         # combobox, allow the 'enter' key to launch the RDP client
-        profiles_combo_entry = self.profiles_combo.get_children()[0]
-        profiles_combo_entry.connect("activate", self.enter_connect,
-                                     profiles_combo_entry)
+        host_combo_entry = self.host_combo.get_children()[0]
+        host_combo_entry.connect("activate", self.enter_connect,
+                                     host_combo_entry)
 
         # Text entry fields
-        self.hostentry = Gtk.Entry()
-        self.hostentry.set_tooltip_text('Hostname or IP address of RDP server')
-        self.hostentry.connect("activate", self.enter_connect, self.hostentry)
         self.userentry = Gtk.Entry()
         self.userentry.set_tooltip_text('''RDP username.
 Domain credentials may be entered in domain\username format:
@@ -341,17 +336,14 @@ Useful for diagnosing connection problems''')
 
         # Grid to which we attach all of our widgets
         grid.attach(menubar, 0, 0, 12, 4)
-        grid.attach(profileslabel, 0, 4, 4, 4)
-        grid.attach(hostlabel, 0, 8, 4, 4)
-        grid.attach(userlabel, 0, 12, 4, 4)
-        grid.attach(geometrylabel, 0, 16, 4, 4)
-        grid.attach(clioptionslabel, 0, 20, 4, 4)
-        grid.attach(programlabel, 0, 24, 4, 4)
-        grid.attach(self.homedirbutton, 0, 28, 4, 4)
-        grid.attach(self.terminalbutton, 0, 32, 4, 4)
-        grid.attach_next_to(self.profiles_combo, profileslabel,
-                            Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(self.hostentry, hostlabel,
+        grid.attach(hostlabel, 0, 4, 4, 4)
+        grid.attach(userlabel, 0, 8, 4, 4)
+        grid.attach(geometrylabel, 0, 12, 4, 4)
+        grid.attach(clioptionslabel, 0, 16, 4, 4)
+        grid.attach(programlabel, 0, 20, 4, 4)
+        grid.attach(self.homedirbutton, 0, 24, 4, 4)
+        grid.attach(self.terminalbutton, 0, 28, 4, 4)
+        grid.attach_next_to(self.host_combo, hostlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.userentry, userlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
@@ -397,12 +389,12 @@ Useful for diagnosing connection problems''')
         height = int(round(cleangeo * mongeometry.height))
         return "%sx%s" % (width, height)
 
-    # Each section in the config file gets an entry in the profiles combobox
-    def populate_profiles_combobox(self):
-        self.profiles_combo.get_model().clear()
+    # Each section in the config file gets an entry in the host combobox
+    def populate_host_combobox(self):
+        self.host_combo.get_model().clear()
         for profile in self.rd.list_profiles():
             if profile != 'defaults':
-                self.profiles_combo.append_text(profile)
+                self.host_combo.append_text(profile)
 
     # Each section in the config file gets an entry in the Unity quicklist
     def populate_unity_quicklist(self):
@@ -477,7 +469,7 @@ Useful for diagnosing connection problems''')
 
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
-    def on_profiles_combo_changed(self, combo):
+    def on_host_combo_changed(self, combo):
         text = combo.get_active_text()
         # Should we really iterate over the list of profiles here?
         for profile in self.rd.list_profiles():
@@ -547,7 +539,7 @@ Useful for diagnosing connection problems''')
         else:
             self.grab_textboxes()
             self.rd.save_config(self.profilename)
-            self.populate_profiles_combobox()
+            self.populate_host_combobox()
             if unity is True:
                 self.clean_unity_quicklist()
 
@@ -561,17 +553,17 @@ Useful for diagnosing connection problems''')
             # reload the default config
             self.rd.read_config('defaults')
             self.load_settings()
-            # Set profiles combobox to have no active item
-            self.profiles_combo.set_active(-1)
+            # Set host combobox to have no active item
+            self.host_combo.set_active(-1)
             # Add a blank string to the head end of the combobox to 'clear' it
-            self.profiles_combo.prepend_text('')
+            self.host_combo.prepend_text('')
             # Set the blank string active to again, to 'clear' the combobox
-            self.profiles_combo.set_active(0)
+            self.host_combo.set_active(0)
             # Now that we've 'cleared' the combobox text, let's delete the
             # blank entry and then repopulate the entire combobox
-            active = self.profiles_combo.get_active()
-            self.profiles_combo.remove(active)
-            self.populate_profiles_combobox()
+            active = self.host_combo.get_active()
+            self.host_combo.remove(active)
+            self.populate_host_combobox()
             if unity is True:
                 self.clean_unity_quicklist()
 
@@ -600,7 +592,7 @@ Useful for diagnosing connection problems''')
 
     # Grab all textbox input
     def grab_textboxes(self):
-        self.rd.options['host'] = self.hostentry.get_text()
+        self.rd.options['host'] = self.host_combo.get_active_text()
         self.rd.options['user'] = self.userentry.get_text()
         self.rd.options['geometry'] = self.geometryentry.get_text()
         self.rd.options['clioptions'] = self.clioptionsentry.get_text()
@@ -629,7 +621,6 @@ Useful for diagnosing connection problems''')
 
     # Load all settings
     def load_settings(self):
-        self.hostentry.set_text(self.rd.options['host'])
         self.userentry.set_text(self.rd.options['user'])
         self.geometryentry.set_text(self.rd.options['geometry'])
         self.clioptionsentry.set_text(self.rd.options['clioptions'])
@@ -663,8 +654,6 @@ def _main():
     window.show_all()
     # Hide the progress spinner until it is needed
     window.spinner.hide()
-    # Set focus to the host entry box on startup
-    window.hostentry.grab_focus()
     Gtk.main()
 
 
