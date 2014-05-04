@@ -261,10 +261,13 @@ class MainWindow(Gtk.Window):
         programlabel = Gtk.Label(label="RDP Client")
 
         # Host combobox
-        self.host_combo = Gtk.ComboBoxText.new_with_entry()
-        self.host_combo.set_tooltip_text('Enter hostname/IP or list saved hosts')
+        self.host_combo_store = Gtk.ListStore(str)
         self.populate_host_combobox()
+        self.host_combo = Gtk.ComboBox.new_with_model_and_entry(self.host_combo_store)
         self.host_combo.connect("changed", self.on_host_combo_changed)
+        self.host_combo.set_entry_text_column(0)
+        self.host_combo.set_tooltip_text('Enter hostname/IP or list saved hosts')
+        self.host_entry = self.host_combo.get_child()
         # If an existing profile name has been typed into the host
         # combobox, allow the 'enter' key to launch the RDP client
         host_combo_entry = self.host_combo.get_children()[0]
@@ -391,10 +394,10 @@ Useful for diagnosing connection problems''')
 
     # Each section in the config file gets an entry in the host combobox
     def populate_host_combobox(self):
-        self.host_combo.get_model().clear()
+        self.host_combo_store.clear()
         for profile in self.rd.list_profiles():
             if profile != 'defaults':
-                self.host_combo.append_text(profile)
+                self.host_combo_store.append([profile])
 
     # Each section in the config file gets an entry in the Unity quicklist
     def populate_unity_quicklist(self):
@@ -470,13 +473,16 @@ Useful for diagnosing connection problems''')
     # Triggered when the combobox is clicked.  We load the selected profile
     # from the config file.
     def on_host_combo_changed(self, combo):
-        text = combo.get_active_text()
-        # Should we really iterate over the list of profiles here?
-        for profile in self.rd.list_profiles():
-            if text == profile:
-                self.rd.read_config(text)
-                self.load_settings()
-        self.profilename = text
+        tree_iter = combo.get_active_iter()
+        if tree_iter != None:
+            model = combo.get_model()
+            name = model[tree_iter][0]
+            print("Drop-down was selected: %s" % (name))
+            for profile in self.rd.list_profiles():
+                if name == profile:
+                    self.rd.read_config(name)
+                    self.load_settings()
+            self.profilename = name
 
     # Triggered when the checkboxes are toggled
     def on_button_toggled(self, button, name):
@@ -533,11 +539,12 @@ Useful for diagnosing connection problems''')
 
     # When the save config button is clicked on the menu bar
     def save_current_config(self, widget):
+        self.grab_textboxes()
+        self.profilename = self.rd.options['host']
         if self.profilename == '' or self.profilename == 'defaults':
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
-            self.grab_textboxes()
             self.rd.save_config(self.profilename)
             self.populate_host_combobox()
             if unity is True:
@@ -556,7 +563,7 @@ Useful for diagnosing connection problems''')
             # Set host combobox to have no active item
             self.host_combo.set_active(-1)
             # Add a blank string to the head end of the combobox to 'clear' it
-            self.host_combo.prepend_text('')
+            #self.host_combo.prepend_text('')
             # Set the blank string active to again, to 'clear' the combobox
             self.host_combo.set_active(0)
             # Now that we've 'cleared' the combobox text, let's delete the
@@ -592,7 +599,7 @@ Useful for diagnosing connection problems''')
 
     # Grab all textbox input
     def grab_textboxes(self):
-        self.rd.options['host'] = self.host_combo.get_active_text()
+        self.rd.options['host'] = self.host_entry.get_text()
         self.rd.options['user'] = self.userentry.get_text()
         self.rd.options['geometry'] = self.geometryentry.get_text()
         self.rd.options['clioptions'] = self.clioptionsentry.get_text()
@@ -621,6 +628,8 @@ Useful for diagnosing connection problems''')
 
     # Load all settings
     def load_settings(self):
+        print dir(self.host_combo)
+        self.host_combo.append_text(self.rd.options['host'])
         self.userentry.set_text(self.rd.options['user'])
         self.geometryentry.set_text(self.rd.options['geometry'])
         self.clioptionsentry.set_text(self.rd.options['clioptions'])
@@ -647,7 +656,6 @@ Useful for diagnosing connection problems''')
 
 
 def _main():
-    # Read the default profile and then save it if it doesn't already exist
     rocket_depot = RocketDepot()
     window = MainWindow(rocket_depot)
     window.connect("delete-event", Gtk.main_quit)
