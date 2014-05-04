@@ -560,16 +560,7 @@ Useful for diagnosing connection problems''')
             # reload the default config
             self.rd.read_config('defaults')
             self.load_settings()
-            # Set host combobox to have no active item
-            self.host_combo.set_active(-1)
             # Add a blank string to the head end of the combobox to 'clear' it
-            #self.host_combo.prepend_text('')
-            # Set the blank string active to again, to 'clear' the combobox
-            self.host_combo.set_active(0)
-            # Now that we've 'cleared' the combobox text, let's delete the
-            # blank entry and then repopulate the entire combobox
-            active = self.host_combo.get_active()
-            self.host_combo.remove(active)
             self.populate_host_combobox()
             if unity is True:
                 self.clean_unity_quicklist()
@@ -628,8 +619,7 @@ Useful for diagnosing connection problems''')
 
     # Load all settings
     def load_settings(self):
-        print dir(self.host_combo)
-        self.host_combo.append_text(self.rd.options['host'])
+        self.host_entry.set_text(self.rd.options['host'])
         self.userentry.set_text(self.rd.options['user'])
         self.geometryentry.set_text(self.rd.options['geometry'])
         self.clioptionsentry.set_text(self.rd.options['clioptions'])
