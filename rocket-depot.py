@@ -268,6 +268,14 @@ class MainWindow(Gtk.Window):
         self.host_combo.set_entry_text_column(0)
         self.host_combo.set_tooltip_text('Enter hostname/IP or list saved hosts')
         self.host_entry = self.host_combo.get_child()
+        # Auto-complete
+        completion = Gtk.EntryCompletion()
+        completion.set_model(self.host_combo_store)
+        self.host_entry.set_completion(completion)
+        completion.set_text_column(0)
+        #completion.connect('match-selected', self.match_cb)
+        completion.set_inline_completion(True)
+        #entry.connect('activate', self.activate_cb)
         # If an existing profile name has been typed into the host
         # combobox, allow the 'enter' key to launch the RDP client
         host_combo_entry = self.host_combo.get_children()[0]
@@ -477,12 +485,20 @@ Useful for diagnosing connection problems''')
         if tree_iter != None:
             model = combo.get_model()
             name = model[tree_iter][0]
-            print("Drop-down was selected: %s" % (name))
             for profile in self.rd.list_profiles():
                 if name == profile:
                     self.rd.read_config(name)
                     self.load_settings()
             self.profilename = name
+        else:
+            entry = combo.get_child()
+            text = entry.get_text()
+            if text in self.rd.list_profiles():
+                self.rd.read_config(text)
+                self.load_settings()
+            if text == '':
+                self.rd.read_config('defaults')
+                self.load_settings()
 
     # Triggered when the checkboxes are toggled
     def on_button_toggled(self, button, name):
