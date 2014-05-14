@@ -587,8 +587,8 @@ Useful for diagnosing connection problems''')
             # reload the default config
             self.rd.read_config('DEFAULT')
             self.load_settings()
-            # Add a blank string to the head end of the combobox to 'clear' it
             self.populate_host_combobox()
+            self.host_entry.set_text('')
             if unity is True:
                 self.clean_unity_quicklist()
 
