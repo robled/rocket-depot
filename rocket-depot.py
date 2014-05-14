@@ -22,7 +22,7 @@ class RocketDepot:
     def __init__(self):
         # Default options.  Overridden by config file.
         self.options = {
-            'host': 'host.example.com',
+            'host': '',
             # set the default RDP user to the local user by default
             'user': os.environ.get('USER', 'user'),
             'geometry': '1024x768',
@@ -40,8 +40,8 @@ class RocketDepot:
         self.configfile = '%s/.config/rocket-depot/config.ini' % self.homedir
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.configfile)
-        self.read_config('defaults')
-        self.save_config('defaults')
+        self.read_config('DEFAULT')
+        self.save_config('DEFAULT')
         self.mw = MainWindow(self)
 
     # Create config dir
@@ -59,36 +59,43 @@ class RocketDepot:
             self.config.write(f)
 
     # Save options to the config file
-    def save_config(self, section):
-        # add the new section if it doesn't exist
-        if not self.config.has_section(section):
-            self.config.add_section(section)
+    def save_config(self, host):
+    # add the new section if it doesn't exist
+        if (not self.config.has_section(host) and
+                host != 'DEFAULT' and host != ''):
+            self.config.add_section(host)
         # Set all selected options
         for opt in self.options:
-            self.config.set(section, opt, self.options[opt])
+            if opt != 'host':
+                self.config.set(host, opt, self.options[opt])
         self.write_config()
 
+
     # Delete a section from the config file
-    def delete_config(self, section):
-        self.config.remove_section(section)
+    def delete_config(self, host):
+        self.config.remove_section(host)
         self.write_config()
 
     # Set options based on section in config file
-    def read_config(self, section):
+    def read_config(self, host):
         if os.path.exists(self.configfile):
             for opt in self.options:
-                if not self.config.has_option(section, opt):
+                if not self.config.has_option(host, opt):
                     self.options[opt] = ''
                 else:
-                    self.options[opt] = self.config.get(section, opt)
+                    self.options[opt] = self.config.get(host, opt)
+            if host == 'DEFAULT':
+                self.options['host'] = ''
+            else:
+                self.options['host'] = host
+
 
     # Make a list of all profiles in config file.  Sort the order
-    # alphabetically, except special 'defaults' profile always comes first
+    # alphabetically, except special 'DEFAULT' profile always comes first
     def list_profiles(self):
         profiles_list = sorted(self.config.sections())
-        defaults_index = profiles_list.index('defaults')
-        profiles_list.insert(0, profiles_list.pop(defaults_index))
         return profiles_list
+
 
     # Check for given host in freerdp's known_hosts file before connecting
     def check_known_hosts(self, host):
@@ -377,7 +384,7 @@ Useful for diagnosing connection problems''')
 
         # Load the default profile on startup
         self.load_settings()
-        self.profilename = 'defaults'
+        self.profilename = 'DEFAULT'
         # Set up Unity quicklist if we can support that
         if unity is True:
             self.create_unity_quicklist()
@@ -404,7 +411,7 @@ Useful for diagnosing connection problems''')
     def populate_host_combobox(self):
         self.host_combo_store.clear()
         for profile in self.rd.list_profiles():
-            if profile != 'defaults':
+            if profile != 'DEFAULT':
                 self.host_combo_store.append([profile])
 
     # Each section in the config file gets an entry in the Unity quicklist
@@ -421,7 +428,7 @@ Useful for diagnosing connection problems''')
 
     # Append a new profile to the Unity quicklist
     def update_unity_quicklist(self, profile):
-        if profile != 'defaults':
+        if profile != 'DEFAULT':
             profile_menu_item = Dbusmenu.Menuitem.new()
             profile_menu_item.property_set(Dbusmenu.MENUITEM_PROP_LABEL,
                                            profile)
@@ -496,8 +503,8 @@ Useful for diagnosing connection problems''')
             if text in self.rd.list_profiles():
                 self.rd.read_config(text)
                 self.load_settings()
-            if text == '':
-                self.rd.read_config('defaults')
+            else:
+                self.rd.read_config('DEFAULT')
                 self.load_settings()
 
     # Triggered when the checkboxes are toggled
@@ -557,7 +564,7 @@ Useful for diagnosing connection problems''')
     def save_current_config(self, widget):
         self.grab_textboxes()
         self.profilename = self.rd.options['host']
-        if self.profilename == '' or self.profilename == 'defaults':
+        if self.profilename == '' or self.profilename == 'DEFAULT':
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
@@ -568,13 +575,13 @@ Useful for diagnosing connection problems''')
 
     # When the delete config button is clicked on the menu bar
     def delete_current_config(self, widget):
-        if self.profilename == '' or self.profilename == 'defaults':
+        if self.profilename == '' or self.profilename == 'DEFAULT':
             self.on_warn(None, 'Select a Profile',
                          'Please select a profile to delete.')
         else:
             self.rd.delete_config(self.profilename)
             # reload the default config
-            self.rd.read_config('defaults')
+            self.rd.read_config('DEFAULT')
             self.load_settings()
             # Add a blank string to the head end of the combobox to 'clear' it
             self.populate_host_combobox()
@@ -584,7 +591,7 @@ Useful for diagnosing connection problems''')
     # When the save config button is clicked on the menu bar
     def save_current_config_as_default(self, widget):
         self.grab_textboxes()
-        self.rd.save_config('defaults')
+        self.rd.save_config('DEFAULT')
 
     # When the quit button is clicked on the menu bar
     def quit(self, widget):
@@ -635,7 +642,6 @@ Useful for diagnosing connection problems''')
 
     # Load all settings
     def load_settings(self):
-        self.host_entry.set_text(self.rd.options['host'])
         self.userentry.set_text(self.rd.options['user'])
         self.geometryentry.set_text(self.rd.options['geometry'])
         self.clioptionsentry.set_text(self.rd.options['clioptions'])
