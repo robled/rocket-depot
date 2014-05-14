@@ -42,6 +42,7 @@ class RocketDepot:
         self.config.read(self.configfile)
         self.read_config('DEFAULT')
         self.save_config('DEFAULT')
+        self.saved_hosts = self.list_profiles()
         self.mw = MainWindow(self)
 
     # Create config dir
@@ -69,12 +70,15 @@ class RocketDepot:
             if opt != 'host':
                 self.config.set(host, opt, self.options[opt])
         self.write_config()
+        self.saved_hosts = self.list_profiles()
 
 
     # Delete a section from the config file
     def delete_config(self, host):
         self.config.remove_section(host)
         self.write_config()
+        self.saved_hosts = self.list_profiles()
+
 
     # Set options based on section in config file
     def read_config(self, host):
@@ -410,13 +414,13 @@ Useful for diagnosing connection problems''')
     # Each section in the config file gets an entry in the host combobox
     def populate_host_combobox(self):
         self.host_combo_store.clear()
-        for profile in self.rd.list_profiles():
+        for profile in self.rd.saved_hosts:
             if profile != 'DEFAULT':
                 self.host_combo_store.append([profile])
 
     # Each section in the config file gets an entry in the Unity quicklist
     def populate_unity_quicklist(self):
-        for profile in self.rd.list_profiles():
+        for profile in self.rd.saved_hosts:
             self.update_unity_quicklist(profile)
 
     # Create the Unity quicklist and populate it with our profiles
@@ -492,7 +496,7 @@ Useful for diagnosing connection problems''')
         if tree_iter != None:
             model = combo.get_model()
             name = model[tree_iter][0]
-            for profile in self.rd.list_profiles():
+            for profile in self.rd.saved_hosts:
                 if name == profile:
                     self.rd.read_config(name)
                     self.load_settings()
@@ -500,7 +504,7 @@ Useful for diagnosing connection problems''')
         else:
             entry = combo.get_child()
             text = entry.get_text()
-            if text in self.rd.list_profiles():
+            if text in self.rd.saved_hosts:
                 self.rd.read_config(text)
                 self.load_settings()
             else:
