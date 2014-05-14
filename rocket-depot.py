@@ -533,13 +533,13 @@ Useful for diagnosing connection problems''')
         action_group.add_action(action_filemenu)
         # Why do the functions here execute on startup if we add parameters?
         action_group.add_actions([("SaveCurrentConfig", None,
-                                   "Save Current Profile", "<control>S", None,
+                                   "Save Host", "<control>S", None,
                                    self.save_current_config)])
         action_group.add_actions([("SaveCurrentConfigAsDefault", None,
-                                   "Save Current Profile as Default", "<control>D",
+                                   "Save Host as Default", "<control>D",
                                    None, self.save_current_config_as_default)])
         action_group.add_actions([("DeleteCurrentConfig", None,
-                                   "Delete Current Profile", "<control><shift>S", None,
+                                   "Delete Host", "<control><shift>S", None,
                                    self.delete_current_config)])
         action_group.add_actions([("FileQuit", None,
                                    "Quit", "<control>Q", None,
