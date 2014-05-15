@@ -536,7 +536,7 @@ Useful for diagnosing connection problems''')
                                    "Save Host", "<control>S", None,
                                    self.save_current_config)])
         action_group.add_actions([("SaveCurrentConfigAsDefault", None,
-                                   "Save Host as Default", "<control>D",
+                                   "Save Settings as Default", "<control>D",
                                    None, self.save_current_config_as_default)])
         action_group.add_actions([("DeleteCurrentConfig", None,
                                    "Delete Host", "<control><shift>S", None,
