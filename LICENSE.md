@@ -1,4 +1,4 @@
-Copyright (c) 2013, David Roble
+Copyright (c) 2014, David Roble
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
