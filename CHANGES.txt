@@ -38,3 +38,7 @@
 0.22 (April 18th, 2014)
   - Bugfix for Unity quicklist.
   - Added keyboard shortcuts.
+
+0.23 (May 24th, 2014)
+  - Autocompletion for saved hosts
+  - "Profiles" removed - see https://github.com/robled/rocket-depot/issues/60
