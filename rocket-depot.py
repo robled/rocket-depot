@@ -229,7 +229,7 @@ class MainWindow(Gtk.Window):
         self.rd = rd
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_position(Gtk.WindowPosition.CENTER)
-        self.set_border_width(8)
+        self.set_border_width(0)
         self.set_wmclass('rocket-depot', 'rocket-depot')
 
         # Menu bar layout
@@ -258,11 +258,6 @@ class MainWindow(Gtk.Window):
         uimanager = self.create_ui_manager()
         uimanager.insert_action_group(action_group)
         menubar = uimanager.get_widget("/MenuBar")
-
-        # Grid for widgets in main window
-        grid = Gtk.Grid()
-        grid.set_row_spacing(4)
-        self.add(grid)
 
         # Labels for text entry fields and comboboxes
         hostlabel = Gtk.Label(label="Host")
@@ -356,15 +351,30 @@ Useful for diagnosing connection problems''')
         self.connectbutton = Gtk.Button(label="Connect")
         self.connectbutton.connect("clicked", self.enter_connect)
 
+        # Root box for widgets
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        box.pack_start(menubar, False, False, 0)
+        self.add(box)
+
+        # Frame for box provides a border for the grid
+        frame = Gtk.Frame()
+        frame.set_shadow_type(Gtk.ShadowType.NONE)
+        frame.set_border_width(6)
+        box.pack_start(frame, False, False, 0)
+
+        # Grid for widgets in main window
+        grid = Gtk.Grid()
+        grid.set_row_spacing(4)
+        frame.add(grid)
+
         # Grid to which we attach all of our widgets
-        grid.attach(menubar, 0, 0, 12, 4)
-        grid.attach(hostlabel, 0, 4, 4, 4)
-        grid.attach(userlabel, 0, 8, 4, 4)
-        grid.attach(geometrylabel, 0, 12, 4, 4)
-        grid.attach(clioptionslabel, 0, 16, 4, 4)
-        grid.attach(programlabel, 0, 20, 4, 4)
-        grid.attach(self.homedirbutton, 0, 24, 4, 4)
-        grid.attach(self.terminalbutton, 0, 28, 4, 4)
+        grid.attach(hostlabel, 0, 0, 4, 4)
+        grid.attach(userlabel, 0, 4, 4, 4)
+        grid.attach(geometrylabel, 0, 8, 4, 4)
+        grid.attach(clioptionslabel, 0, 12, 4, 4)
+        grid.attach(programlabel, 0, 16, 4, 4)
+        grid.attach(self.homedirbutton, 0, 20, 4, 4)
+        grid.attach(self.terminalbutton, 0, 24, 4, 4)
         grid.attach_next_to(self.host_combo, hostlabel,
                             Gtk.PositionType.RIGHT, 8, 4)
         grid.attach_next_to(self.userentry, userlabel,
