@@ -351,21 +351,28 @@ Useful for diagnosing connection problems''')
         self.connectbutton = Gtk.Button(label="Connect")
         self.connectbutton.connect("clicked", self.enter_connect)
 
-        # Root box for widgets
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        box.pack_start(menubar, False, False, 0)
-        self.add(box)
+        # Status bar
+        status_bar = Gtk.Statusbar()
+        status_bar.push(1, "Ready")
 
         # Frame for box provides a border for the grid
         frame = Gtk.Frame()
         frame.set_shadow_type(Gtk.ShadowType.NONE)
-        frame.set_border_width(6)
-        box.pack_start(frame, False, False, 0)
+        frame.set_border_width(4)
 
         # Grid for widgets in main window
         grid = Gtk.Grid()
         grid.set_row_spacing(4)
         frame.add(grid)
+
+        # Root box for widgets
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        box.pack_start(menubar, False, False, 0)
+        self.add(box)
+        box.pack_start(frame, False, False, 0)
+        hseparator = Gtk.HSeparator()
+        box.pack_start(hseparator, False, False, 0)
+        box.pack_end(status_bar, False, False, 0)
 
         # Grid to which we attach all of our widgets
         grid.attach(hostlabel, 0, 0, 4, 4)
