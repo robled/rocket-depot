@@ -352,8 +352,7 @@ Useful for diagnosing connection problems''')
         self.connectbutton.connect("clicked", self.enter_connect)
 
         # Status bar
-        status_bar = Gtk.Statusbar()
-        status_bar.push(1, "Ready")
+        self.status_bar = Gtk.Statusbar()
 
         # Frame for box provides a border for the grid
         frame = Gtk.Frame()
@@ -372,7 +371,7 @@ Useful for diagnosing connection problems''')
         box.pack_start(frame, False, False, 0)
         hseparator = Gtk.HSeparator()
         box.pack_start(hseparator, False, False, 0)
-        box.pack_end(status_bar, False, False, 0)
+        box.pack_end(self.status_bar, False, False, 0)
 
         # Grid to which we attach all of our widgets
         grid.attach(hostlabel, 0, 0, 4, 4)
@@ -404,8 +403,8 @@ Useful for diagnosing connection problems''')
                             Gtk.PositionType.RIGHT, 8, 4)
 
         # Load the default profile on startup
-        self.load_settings()
         self.profilename = 'DEFAULT'
+        self.load_settings()
         # Set up Unity quicklist if we can support that
         if unity is True:
             self.create_unity_quicklist()
@@ -471,6 +470,7 @@ Useful for diagnosing connection problems''')
         if not self.rd.options['host']:
             self.on_warn(None, 'No Host', 'No Host or IP Address Given')
         else:
+            self.status_bar.push(0, 'Connecting to "' + self.rd.options['host'] + '" ...')
             self.connectbutton.hide()
             self.spinner.show()
             self.spinner.start()
@@ -489,6 +489,7 @@ Useful for diagnosing connection problems''')
         self.start_thread()
 
     def work_finished_cb(self):
+        self.status_bar.pop(0)
         self.spinner.stop()
         self.spinner.hide()
         self.connectbutton.show()
@@ -590,6 +591,7 @@ Useful for diagnosing connection problems''')
                          'Please name your profile before saving.')
         else:
             self.rd.save_config(self.profilename)
+            self.status_bar.push(0, 'Host "' + self.rd.options['host'] + '" saved')
             self.populate_host_combobox()
             if unity is True:
                 self.clean_unity_quicklist()
@@ -613,6 +615,7 @@ Useful for diagnosing connection problems''')
     def save_current_config_as_default(self, widget):
         self.grab_textboxes()
         self.rd.save_config('DEFAULT')
+        self.status_bar.push(0, 'Default host settings saved')
 
     # When the quit button is clicked on the menu bar
     def quit(self, widget):
@@ -686,6 +689,13 @@ Useful for diagnosing connection problems''')
             self.terminalbutton.set_active(True)
         else:
             self.terminalbutton.set_active(False)
+        self.status_bar_load_host()
+
+    def status_bar_load_host(self):
+        if self.rd.options['host'] == '':
+            self.status_bar.push(0, 'Default host settings loaded')
+        else:
+            self.status_bar.push(0, 'Saved host "' + self.rd.options['host'] + '" loaded')
 
 
 def _main():
