@@ -591,8 +591,8 @@ Useful for diagnosing connection problems''')
                          'Please name your profile before saving.')
         else:
             self.rd.save_config(self.profilename)
-            self.status_bar.push(0, 'Host "' + self.rd.options['host'] + '" saved')
             self.populate_host_combobox()
+            self.status_bar.push(0, 'Host "' + self.rd.options['host'] + '" saved')
             if unity is True:
                 self.clean_unity_quicklist()
 
