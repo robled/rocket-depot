@@ -371,7 +371,10 @@ Useful for diagnosing connection problems''')
         box.pack_start(frame, False, False, 0)
         hseparator = Gtk.HSeparator()
         box.pack_start(hseparator, False, False, 0)
-        box.pack_end(self.status_bar, False, False, 0)
+        status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        status_box.pack_start(self.status_bar, False, False, 0)
+        status_box.pack_end(self.spinner, False, False, 10)
+        box.pack_end(status_box, False, False, 0)
 
         # Grid to which we attach all of our widgets
         grid.attach(hostlabel, 0, 0, 4, 4)
@@ -398,8 +401,6 @@ Useful for diagnosing connection problems''')
         grid.attach_next_to(self.fullscreenbutton, self.grabkeyboardbutton,
                             Gtk.PositionType.RIGHT, 4, 4)
         grid.attach_next_to(self.connectbutton, self.terminalbutton,
-                            Gtk.PositionType.RIGHT, 8, 4)
-        grid.attach_next_to(self.spinner, self.terminalbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
         # Load the default profile on startup
@@ -471,8 +472,7 @@ Useful for diagnosing connection problems''')
             self.on_warn(None, 'No Host', 'No Host or IP Address Given')
         else:
             self.status_bar.push(0, 'Connecting to "' + self.rd.options['host'] + '" ...')
-            self.connectbutton.hide()
-            self.spinner.show()
+            self.connectbutton.set_sensitive(False)
             self.spinner.start()
             cmdline = self.rd.run_program()
             thread = WorkerThread(self.work_finished_cb, cmdline)
@@ -491,8 +491,7 @@ Useful for diagnosing connection problems''')
     def work_finished_cb(self):
         self.status_bar.pop(0)
         self.spinner.stop()
-        self.spinner.hide()
-        self.connectbutton.show()
+        self.connectbutton.set_sensitive(True)
         error_text = WorkerThread.error_text
         return_code = WorkerThread.return_code
         return_code_ignore = [62, 255]
@@ -703,8 +702,6 @@ def _main():
     window = MainWindow(rocket_depot)
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
-    # Hide the progress spinner until it is needed
-    window.spinner.hide()
     Gtk.main()
 
 
