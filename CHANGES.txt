@@ -42,3 +42,8 @@
 0.23 (May 24th, 2014)
   - Autocompletion for saved hosts
   - "Profiles" removed - see https://github.com/robled/rocket-depot/issues/60
+
+0.24 (June 17th, 2014)
+  - Added status bar
+  - Improved look of menu bar for certain configurations
+  - Bugfix for saved host deletion
