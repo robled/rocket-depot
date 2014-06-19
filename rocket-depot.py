@@ -4,6 +4,7 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import threading
 import time
 import webbrowser
@@ -20,6 +21,8 @@ else:
 
 class RocketDepot:
     def __init__(self):
+        self.debug = False
+        self.debug_cmdline()
         # Default options.  Overridden by config file.
         self.options = {
             'host': '',
@@ -45,6 +48,21 @@ class RocketDepot:
         self.saved_hosts = self.list_profiles()
         self.mw = MainWindow(self)
 
+    def debug_cmdline(self):
+        '''A simple graphical frontend for rdesktop and FreeRDP
+
+Usage: rocket-depot [--debug]
+'''
+        try:
+            arg = sys.argv[1]
+            if arg == '--debug':
+                self.debug = True
+            else:
+                print self.debug_cmdline.__doc__
+                sys.exit(1)
+        except IndexError:
+            self.debug = False
+
     # Create config dir
     def create_config_dir(self):
         configdir = '%s/.config/rocket-depot' % self.homedir
@@ -52,7 +70,8 @@ class RocketDepot:
             try:
                 os.mkdir(configdir, 0700)
             except OSError:
-                print 'Error:  Unable to create config directory.'
+                if self.debug:
+                    print 'Error:  Unable to create config directory.'
 
     # Open the config file for writing
     def write_config(self):
@@ -208,8 +227,6 @@ class WorkerThread(threading.Thread):
 
     # Start the client and wait some seconds for errors
     def run(self):
-        # Print the command line that we constructed to the terminal
-        #print 'Command to execute: \n' + ' '.join(str(x) for x in self.cmdline)
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
         start_time = time.time()
         while p.poll() is None:
@@ -487,6 +504,9 @@ Useful for diagnosing connection problems''')
             self.menubar.set_sensitive(False)
             self.spinner.start()
             cmdline = self.rd.run_program()
+            # Print the command line that we constructed to the terminal
+            if self.rd.debug:
+                print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
             thread = WorkerThread(self.work_finished_cb, cmdline)
             thread.start()
 
