@@ -209,7 +209,7 @@ class WorkerThread(threading.Thread):
     # Start the client and wait some seconds for errors
     def run(self):
         # Print the command line that we constructed to the terminal
-        print 'Command to execute: \n' + ' '.join(str(x) for x in self.cmdline)
+        #print 'Command to execute: \n' + ' '.join(str(x) for x in self.cmdline)
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
         start_time = time.time()
         while p.poll() is None:
@@ -228,7 +228,6 @@ class MainWindow(Gtk.Window):
         # Window properties
         self.rd = rd
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
-        self.set_position(Gtk.WindowPosition.CENTER)
         self.set_border_width(0)
         self.set_wmclass('rocket-depot', 'rocket-depot')
 
