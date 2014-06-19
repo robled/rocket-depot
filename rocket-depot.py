@@ -256,7 +256,7 @@ class MainWindow(Gtk.Window):
         self.add_help_menu_actions(action_group)
         uimanager = self.create_ui_manager()
         uimanager.insert_action_group(action_group)
-        menubar = uimanager.get_widget("/MenuBar")
+        self.menubar = uimanager.get_widget("/MenuBar")
 
         # Labels for text entry fields and comboboxes
         hostlabel = Gtk.Label(label="Host")
@@ -365,7 +365,7 @@ Useful for diagnosing connection problems''')
 
         # Root box for widgets
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        box.pack_start(menubar, False, False, 0)
+        box.pack_start(self.menubar, False, False, 0)
         self.add(box)
         box.pack_start(frame, False, False, 0)
         hseparator = Gtk.HSeparator()
@@ -482,6 +482,7 @@ Useful for diagnosing connection problems''')
             self.fullscreenbutton.set_sensitive(False)
             self.terminalbutton.set_sensitive(False)
             self.connectbutton.set_sensitive(False)
+            self.menubar.set_sensitive(False)
             self.spinner.start()
             cmdline = self.rd.run_program()
             thread = WorkerThread(self.work_finished_cb, cmdline)
@@ -511,6 +512,7 @@ Useful for diagnosing connection problems''')
         self.fullscreenbutton.set_sensitive(True)
         self.terminalbutton.set_sensitive(True)
         self.connectbutton.set_sensitive(True)
+        self.menubar.set_sensitive(True)
         error_text = WorkerThread.error_text
         return_code = WorkerThread.return_code
         return_code_ignore = [62, 255]
