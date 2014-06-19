@@ -230,6 +230,8 @@ class MainWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_border_width(0)
         self.set_wmclass('rocket-depot', 'rocket-depot')
+        self.program_icon = GdkPixbuf.Pixbuf.new_from_file("/usr/share/icons/hicolor/scalable/apps/rocket-depot.svg")
+        self.set_icon(self.program_icon)
 
         # Menu bar layout
         self.UI_INFO = """
@@ -680,7 +682,8 @@ Useful for diagnosing connection problems''')
         about.set_copyright("2014 David Roble")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
-        about.set_logo(GdkPixbuf.Pixbuf.new_from_file("/usr/share/icons/hicolor/scalable/apps/rocket-depot.svg"))
+        about.set_logo(self.program_icon)
+        about.set_icon(self.program_icon)
         about.run()
         about.destroy()
 
