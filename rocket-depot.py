@@ -419,7 +419,7 @@ Useful for diagnosing connection problems''')
                             Gtk.PositionType.RIGHT, 8, 4)
 
         # Load the default profile on startup
-        self.profilename = 'DEFAULT'
+        self.rd.options['host'] = 'DEFAULT'
         self.load_settings()
         # Set up Unity quicklist if we can support that
         if unity is True:
@@ -504,7 +504,8 @@ Useful for diagnosing connection problems''')
             cmdline = self.rd.run_program()
             # Print the command line that we constructed to the terminal
             if self.rd.debug:
-                print 'Command to execute: \n' + ' '.join(str(x) for x in cmdline)
+                print '''Command to execute:
+''' + ' '.join(str(x) for x in cmdline)
             thread = WorkerThread(self.work_finished_cb, cmdline)
             thread.start()
 
@@ -558,7 +559,7 @@ Useful for diagnosing connection problems''')
                 if name == profile:
                     self.rd.read_config(name)
                     self.load_settings()
-            self.profilename = name
+            self.rd.options['host'] = name
         else:
             entry = combo.get_child()
             text = entry.get_text()
@@ -626,12 +627,13 @@ Useful for diagnosing connection problems''')
     # When the save config button is clicked on the menu bar
     def save_current_config(self, widget):
         self.grab_textboxes()
-        self.profilename = self.rd.options['host']
-        if self.profilename == '' or self.profilename == 'DEFAULT':
+        #self.profilename = self.rd.options['host']
+        if (self.rd.options['host'] == '' or
+                self.rd.options['host'] == 'DEFAULT'):
             self.on_warn(None, 'No Profile Name',
                          'Please name your profile before saving.')
         else:
-            self.rd.save_config(self.profilename)
+            self.rd.save_config(self.rd.options['host'])
             self.populate_host_combobox()
             self.status_bar.push(0, 'Host "' +
                                  self.rd.options['host'] + '" saved')
@@ -640,11 +642,12 @@ Useful for diagnosing connection problems''')
 
     # When the delete config button is clicked on the menu bar
     def delete_current_config(self, widget):
-        if self.profilename == '' or self.profilename == 'DEFAULT':
+        if (self.rd.options['host'] == '' or
+                self.rd.options['host'] == 'DEFAULT'):
             self.on_warn(None, 'Select a Profile',
                          'Please select a profile to delete.')
         else:
-            self.rd.delete_config(self.profilename)
+            self.rd.delete_config(self.rd.options['host'])
             # reload the default config
             self.rd.read_config('DEFAULT')
             self.load_settings()
@@ -735,7 +738,8 @@ Useful for diagnosing connection problems''')
         self.status_bar_load_host()
 
     def status_bar_load_host(self):
-        if self.rd.options['host'] == '':
+        if (self.rd.options['host'] == '' or
+                self.rd.options['host'] == 'DEFAULT'):
             self.status_bar.push(0, 'Default host settings loaded')
         else:
             self.status_bar.push(0, 'Saved host "' +
