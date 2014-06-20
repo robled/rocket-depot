@@ -581,7 +581,6 @@ Useful for diagnosing connection problems''')
     # Triggered when the program radio buttons are toggled
     def on_radio_button_toggled(self, button, name):
         if button.get_active():
-            state = 'true'
             self.rd.options['program'] = name
 
     # Triggered when the file menu is used
