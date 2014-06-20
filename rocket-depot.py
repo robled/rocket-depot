@@ -91,13 +91,11 @@ Usage: rocket-depot [--debug]
         self.write_config()
         self.saved_hosts = self.list_profiles()
 
-
     # Delete a section from the config file
     def delete_config(self, host):
         self.config.remove_section(host)
         self.write_config()
         self.saved_hosts = self.list_profiles()
-
 
     # Set options based on section in config file
     def read_config(self, host):
@@ -112,13 +110,11 @@ Usage: rocket-depot [--debug]
             else:
                 self.options['host'] = host
 
-
     # Make a list of all profiles in config file.  Sort the order
     # alphabetically, except special 'DEFAULT' profile always comes first
     def list_profiles(self):
         profiles_list = sorted(self.config.sections())
         return profiles_list
-
 
     # Check for given host in freerdp's known_hosts file before connecting
     def check_known_hosts(self, host):
@@ -210,7 +206,8 @@ Usage: rocket-depot [--debug]
         if cmdline[0] == 'xfreerdp':
             if '-sec-nla' not in cmdline:
                 prepend_terminal()
-            if '/cert-ignore' not in cmdline and self.check_known_hosts(host) is False:
+            if ('/cert-ignore' not in cmdline and
+                    self.check_known_hosts(host) is False):
                 prepend_terminal()
         if self.options['terminal'] == 'true':
             prepend_terminal()
@@ -304,7 +301,7 @@ class MainWindow(Gtk.Window):
         # combobox, allow the 'enter' key to launch the RDP client
         host_combo_entry = self.host_combo.get_children()[0]
         host_combo_entry.connect("activate", self.enter_connect,
-                                     host_combo_entry)
+                                 host_combo_entry)
 
         # Text entry fields
         self.userentry = Gtk.Entry()
@@ -489,7 +486,8 @@ Useful for diagnosing connection problems''')
         if not self.rd.options['host']:
             self.on_warn(None, 'No Host', 'No Host or IP Address Given')
         else:
-            self.status_bar.push(0, 'Connecting to "' + self.rd.options['host'] + '" ...')
+            self.status_bar.push(0, 'Connecting to "' +
+                                 self.rd.options['host'] + '" ...')
             self.host_combo.set_sensitive(False)
             self.userentry.set_sensitive(False)
             self.geometryentry.set_sensitive(False)
@@ -553,7 +551,7 @@ Useful for diagnosing connection problems''')
     # from the config file.
     def on_host_combo_changed(self, combo):
         tree_iter = combo.get_active_iter()
-        if tree_iter != None:
+        if tree_iter is not None:
             model = combo.get_model()
             name = model[tree_iter][0]
             for profile in self.rd.saved_hosts:
@@ -610,8 +608,10 @@ Useful for diagnosing connection problems''')
         action_group.add_actions([
             ("Help", None, "Help"),
             ("About", None, "About", None, None, self.on_menu_help_about),
-            ("FreeRDPDocs", None, "FreeRDP Web Documentation", None, None, self.on_menu_xfreerdp_help),
-            ("rdesktopDocs", None, "rdesktop Web Documentation", None, None, self.on_menu_rdesktop_help),
+            ("FreeRDPDocs", None, "FreeRDP Web Documentation", None, None,
+             self.on_menu_xfreerdp_help),
+            ("rdesktopDocs", None, "rdesktop Web Documentation", None, None,
+             self.on_menu_rdesktop_help),
         ])
 
     # Needed for the menu bar
@@ -634,7 +634,8 @@ Useful for diagnosing connection problems''')
         else:
             self.rd.save_config(self.profilename)
             self.populate_host_combobox()
-            self.status_bar.push(0, 'Host "' + self.rd.options['host'] + '" saved')
+            self.status_bar.push(0, 'Host "' +
+                                 self.rd.options['host'] + '" saved')
             if unity is True:
                 self.clean_unity_quicklist()
 
@@ -738,7 +739,8 @@ Useful for diagnosing connection problems''')
         if self.rd.options['host'] == '':
             self.status_bar.push(0, 'Default host settings loaded')
         else:
-            self.status_bar.push(0, 'Saved host "' + self.rd.options['host'] + '" loaded')
+            self.status_bar.push(0, 'Saved host "' +
+                                 self.rd.options['host'] + '" loaded')
 
 
 def _main():
