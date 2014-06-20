@@ -45,7 +45,7 @@ class RocketDepot:
         self.config.read(self.configfile)
         self.read_config('DEFAULT')
         self.save_config('DEFAULT')
-        self.saved_hosts = self.list_profiles()
+        self.saved_hosts = self.list_saved_hosts()
         self.mw = MainWindow(self)
 
     def debug_cmdline(self):
@@ -89,13 +89,13 @@ Usage: rocket-depot [--debug]
             if opt != 'host':
                 self.config.set(host, opt, self.options[opt])
         self.write_config()
-        self.saved_hosts = self.list_profiles()
+        self.saved_hosts = self.list_saved_hosts()
 
     # Delete a section from the config file
     def delete_config(self, host):
         self.config.remove_section(host)
         self.write_config()
-        self.saved_hosts = self.list_profiles()
+        self.saved_hosts = self.list_saved_hosts()
 
     # Set options based on section in config file
     def read_config(self, host):
@@ -110,11 +110,11 @@ Usage: rocket-depot [--debug]
             else:
                 self.options['host'] = host
 
-    # Make a list of all profiles in config file.  Sort the order
-    # alphabetically, except special 'DEFAULT' profile always comes first
-    def list_profiles(self):
-        profiles_list = sorted(self.config.sections())
-        return profiles_list
+    # Make a list of all hosts in config file.  Sort the order
+    # alphabetically, except special 'DEFAULT' host always comes first
+    def list_saved_hosts(self):
+        hosts = sorted(self.config.sections())
+        return hosts
 
     # Check for given host in freerdp's known_hosts file before connecting
     def check_known_hosts(self, host):
@@ -297,7 +297,7 @@ class MainWindow(Gtk.Window):
         #completion.connect('match-selected', self.match_cb)
         completion.set_inline_completion(True)
         #entry.connect('activate', self.activate_cb)
-        # If an existing profile name has been typed into the host
+        # If an existing hostname has been typed into the host
         # combobox, allow the 'enter' key to launch the RDP client
         host_combo_entry = self.host_combo.get_children()[0]
         host_combo_entry.connect("activate", self.enter_connect,
@@ -418,7 +418,7 @@ Useful for diagnosing connection problems''')
         grid.attach_next_to(self.connectbutton, self.terminalbutton,
                             Gtk.PositionType.RIGHT, 8, 4)
 
-        # Load the default profile on startup
+        # Load the default host on startup
         self.rd.options['host'] = 'DEFAULT'
         self.load_settings()
         # Set up Unity quicklist if we can support that
@@ -446,35 +446,35 @@ Useful for diagnosing connection problems''')
     # Each section in the config file gets an entry in the host combobox
     def populate_host_combobox(self):
         self.host_combo_store.clear()
-        for profile in self.rd.saved_hosts:
-            if profile != 'DEFAULT':
-                self.host_combo_store.append([profile])
+        for host in self.rd.saved_hosts:
+            if host != 'DEFAULT':
+                self.host_combo_store.append([host])
 
     # Each section in the config file gets an entry in the Unity quicklist
     def populate_unity_quicklist(self):
-        for profile in self.rd.saved_hosts:
-            self.update_unity_quicklist(profile)
+        for host in self.rd.saved_hosts:
+            self.update_unity_quicklist(host)
 
-    # Create the Unity quicklist and populate it with our profiles
+    # Create the Unity quicklist and populate it with our hosts
     def create_unity_quicklist(self):
         entry = Unity.LauncherEntry.get_for_desktop_id("rocket-depot.desktop")
         self.quicklist = Dbusmenu.Menuitem.new()
         self.populate_unity_quicklist()
         entry.set_property("quicklist", self.quicklist)
 
-    # Append a new profile to the Unity quicklist
-    def update_unity_quicklist(self, profile):
-        if profile != 'DEFAULT':
-            profile_menu_item = Dbusmenu.Menuitem.new()
-            profile_menu_item.property_set(Dbusmenu.MENUITEM_PROP_LABEL,
-                                           profile)
-            profile_menu_item.property_set_bool(Dbusmenu.MENUITEM_PROP_VISIBLE,
+    # Append a new host to the Unity quicklist
+    def update_unity_quicklist(self, host):
+        if host != 'DEFAULT':
+            host_menu_item = Dbusmenu.Menuitem.new()
+            host_menu_item.property_set(Dbusmenu.MENUITEM_PROP_LABEL,
+                                           host)
+            host_menu_item.property_set_bool(Dbusmenu.MENUITEM_PROP_VISIBLE,
                                                 True)
-            profile_menu_item.connect("item-activated", self.on_unity_clicked,
-                                      profile)
-            self.quicklist.child_append(profile_menu_item)
+            host_menu_item.connect("item-activated", self.on_unity_clicked,
+                                      host)
+            self.quicklist.child_append(host_menu_item)
 
-    # If we delete a profile we must delete all Unity quicklist entries and
+    # If we delete a host we must delete all Unity quicklist entries and
     # rebuild the quicklist
     def clean_unity_quicklist(self):
         for x in self.quicklist.get_children():
@@ -509,9 +509,9 @@ Useful for diagnosing connection problems''')
             thread = WorkerThread(self.work_finished_cb, cmdline)
             thread.start()
 
-    # Triggered when a profile is selected via the Unity quicklist
-    def on_unity_clicked(self, widget, entry, profile):
-        self.rd.read_config(profile)
+    # Triggered when a host is selected via the Unity quicklist
+    def on_unity_clicked(self, widget, entry, host):
+        self.rd.read_config(host)
         self.start_thread()
 
     # Trigged when we press 'Enter' or the 'Connect' button
@@ -548,15 +548,15 @@ Useful for diagnosing connection problems''')
             self.on_warn(None, 'Connection Error', '%s: \n'
                          % self.rd.options['program'] + error_text)
 
-    # Triggered when the combobox is clicked.  We load the selected profile
+    # Triggered when the combobox is clicked.  We load the selected host
     # from the config file.
     def on_host_combo_changed(self, combo):
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
             model = combo.get_model()
             name = model[tree_iter][0]
-            for profile in self.rd.saved_hosts:
-                if name == profile:
+            for host in self.rd.saved_hosts:
+                if name == host:
                     self.rd.read_config(name)
                     self.load_settings()
             self.rd.options['host'] = name
@@ -627,11 +627,10 @@ Useful for diagnosing connection problems''')
     # When the save config button is clicked on the menu bar
     def save_current_config(self, widget):
         self.grab_textboxes()
-        #self.profilename = self.rd.options['host']
         if (self.rd.options['host'] == '' or
                 self.rd.options['host'] == 'DEFAULT'):
-            self.on_warn(None, 'No Profile Name',
-                         'Please name your profile before saving.')
+            self.on_warn(None, 'No hostname',
+                         'Please name your host before saving.')
         else:
             self.rd.save_config(self.rd.options['host'])
             self.populate_host_combobox()
@@ -644,8 +643,8 @@ Useful for diagnosing connection problems''')
     def delete_current_config(self, widget):
         if (self.rd.options['host'] == '' or
                 self.rd.options['host'] == 'DEFAULT'):
-            self.on_warn(None, 'Select a Profile',
-                         'Please select a profile to delete.')
+            self.on_warn(None, 'Select a Saved Host',
+                         'Please select a saved host to delete.')
         else:
             self.rd.delete_config(self.rd.options['host'])
             # reload the default config
