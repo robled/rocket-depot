@@ -467,11 +467,11 @@ Useful for diagnosing connection problems''')
         if host != 'DEFAULT':
             host_menu_item = Dbusmenu.Menuitem.new()
             host_menu_item.property_set(Dbusmenu.MENUITEM_PROP_LABEL,
-                                           host)
+                                        host)
             host_menu_item.property_set_bool(Dbusmenu.MENUITEM_PROP_VISIBLE,
-                                                True)
+                                             True)
             host_menu_item.connect("item-activated", self.on_unity_clicked,
-                                      host)
+                                   host)
             self.quicklist.child_append(host_menu_item)
 
     # If we delete a host we must delete all Unity quicklist entries and
