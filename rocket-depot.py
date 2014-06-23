@@ -20,7 +20,9 @@ else:
 
 
 class RocketDepot:
+    # Main program class for non-GUI stuff
     def __init__(self):
+        # check for debug CLI flag on startup
         self.debug = False
         self.debug_cmdline()
         # Default options.  Overridden by config file.
@@ -36,19 +38,21 @@ class RocketDepot:
             'clioptions': '',
             'terminal': 'false'
         }
-        # Local user homedir and config file
+        # Local user homedir and config directory
         self.homedir = os.environ['HOME']
         self.create_config_dir()
-        # Our config dotfile
+        # Our config dotfile which we will load
         self.configfile = '%s/.config/rocket-depot/config.ini' % self.homedir
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.configfile)
         self.read_config('DEFAULT')
         self.save_config('DEFAULT')
+        # a list of saved hosts for later use
         self.saved_hosts = self.list_saved_hosts()
         self.mw = MainWindow(self)
 
     def debug_cmdline(self):
+        # CLI parser for debug option
         '''A simple graphical frontend for rdesktop and FreeRDP
 
 Usage: rocket-depot [--debug]
@@ -57,14 +61,15 @@ Usage: rocket-depot [--debug]
             arg = sys.argv[1]
             if arg == '--debug':
                 self.debug = True
+                print 'debugging enabled'
             else:
                 print self.debug_cmdline.__doc__
                 sys.exit(1)
         except IndexError:
             self.debug = False
 
-    # Create config dir
     def create_config_dir(self):
+        # Create config file directory if necessary
         configdir = '%s/.config/rocket-depot' % self.homedir
         if not os.path.exists(configdir):
             try:
@@ -73,14 +78,14 @@ Usage: rocket-depot [--debug]
                 if self.debug:
                     print 'Error:  Unable to create config directory.'
 
-    # Open the config file for writing
     def write_config(self):
+        # Open the config file for writing
         with open(self.configfile, 'wb') as f:
             self.config.write(f)
 
-    # Save options to the config file
     def save_config(self, host):
-    # add the new section if it doesn't exist
+        # Save options to the config file and add the new section if it doesn't
+        # exist
         if (not self.config.has_section(host) and
                 host != 'DEFAULT' and host != ''):
             self.config.add_section(host)
@@ -91,14 +96,14 @@ Usage: rocket-depot [--debug]
         self.write_config()
         self.saved_hosts = self.list_saved_hosts()
 
-    # Delete a section from the config file
     def delete_config(self, host):
+        # Delete a section from the config file
         self.config.remove_section(host)
         self.write_config()
         self.saved_hosts = self.list_saved_hosts()
 
-    # Set options based on section in config file
     def read_config(self, host):
+        # Set options based on section in config file
         if os.path.exists(self.configfile):
             for opt in self.options:
                 if not self.config.has_option(host, opt):
@@ -110,14 +115,14 @@ Usage: rocket-depot [--debug]
             else:
                 self.options['host'] = host
 
-    # Make a list of all hosts in config file.  Sort the order
-    # alphabetically, except special 'DEFAULT' host always comes first
     def list_saved_hosts(self):
+        # Make a list of all hosts in config file.  Sort the order
+        # alphabetically.
         hosts = sorted(self.config.sections())
         return hosts
 
-    # Check for given host in freerdp's known_hosts file before connecting
     def check_known_hosts(self, host):
+        # Check for given host in freerdp's known_hosts file before connecting
         known_hosts = '%s/.config/freerdp/known_hosts' % self.homedir
         try:
             with open(known_hosts, 'r') as f:
@@ -130,10 +135,11 @@ Usage: rocket-depot [--debug]
         except IOError:
             return False
 
-    # Run the selected RDP client - currently rdesktop or xfreerdp
     def run_program(self):
-        # CLI parameters for each RDP client we support.  stdopts are always
-        # used.
+        # Run the selected RDP client - currently rdesktop or xfreerdp.
+        #
+        # client_opts are CLI parameters for each RDP client we support.
+        # stdopts are always used.
         client_opts = {
             'rdesktop': {
                 'stdopts': ['rdesktop', '-a16'],
@@ -166,8 +172,8 @@ Usage: rocket-depot [--debug]
         if self.options['user'] != '':
             # We put quotes around the username so that the domain\username
             # format doesn't get escaped
-            slashuser = "'%s'" % str.strip(self.options['user'])
-            params.append(client_opts[client]['user'] + slashuser)
+            slash_user = "'%s'" % str.strip(self.options['user'])
+            params.append(client_opts[client]['user'] + slash_user)
         # Detect percent symbol in geometry field.  If it exists we do math to
         # use the correct resolution for the active monitor.  Otherwise we
         # submit a given resolution such as 1024x768 to the list of parameters.
@@ -192,29 +198,34 @@ Usage: rocket-depot [--debug]
                       + '%s' % str.strip(self.options['host']))
         # Clean up params list to make it shell compliant
         cmdline = shlex.split(' '.join(params))
+        # Add an xterm to the command line if needed
         self.terminal_needed(self.options['host'], cmdline)
         return cmdline
 
-    # Open a terminal when freerdp needs user input
     def terminal_needed(self, host, cmdline):
+        # Open a terminal when freerdp needs user input
         terminal_args = ['xterm', '-hold', '-e']
 
         def prepend_terminal():
             if cmdline[0] != terminal_args[0]:
+                # Doing this in reverse makes the terminal_args list more
+                # readable
                 for x in reversed(terminal_args):
                     cmdline.insert(0, x)
+        # FreeRDP needs input for certain CLI options
         if cmdline[0] == 'xfreerdp':
             if '-sec-nla' not in cmdline:
                 prepend_terminal()
             if ('/cert-ignore' not in cmdline and
                     self.check_known_hosts(host) is False):
                 prepend_terminal()
+        # The user may want a terminal no matter what
         if self.options['terminal'] == 'true':
             prepend_terminal()
 
 
-# Thread for RDP client launch feedback in UI
 class WorkerThread(threading.Thread):
+    # Thread for RDP client launch feedback in UI
     def __init__(self, callback, cmdline):
         threading.Thread.__init__(self)
         self.callback = callback
@@ -222,8 +233,8 @@ class WorkerThread(threading.Thread):
         WorkerThread.error_text = ''
         WorkerThread.return_code = 0
 
-    # Start the client and wait some seconds for errors
     def run(self):
+        # Start the client and wait some seconds for errors
         p = subprocess.Popen(self.cmdline, stderr=subprocess.PIPE)
         start_time = time.time()
         while p.poll() is None:
@@ -236,8 +247,8 @@ class WorkerThread(threading.Thread):
         GLib.idle_add(self.callback)
 
 
-# GUI stuff
 class MainWindow(Gtk.Window):
+    # GUI stuff
     def __init__(self, rd):
         # Window properties
         self.rd = rd
@@ -294,9 +305,7 @@ class MainWindow(Gtk.Window):
         completion.set_model(self.host_combo_store)
         self.host_entry.set_completion(completion)
         completion.set_text_column(0)
-        #completion.connect('match-selected', self.match_cb)
         completion.set_inline_completion(True)
-        #entry.connect('activate', self.activate_cb)
         # If an existing hostname has been typed into the host
         # combobox, allow the 'enter' key to launch the RDP client
         host_combo_entry = self.host_combo.get_children()[0]
@@ -359,14 +368,12 @@ Useful for diagnosing connection problems''')
         self.terminalbutton.connect("toggled", self.on_button_toggled,
                                     "terminal")
 
-        # Progress spinner
-        self.spinner = Gtk.Spinner()
-
         # Connect button
         self.connectbutton = Gtk.Button(label="Connect")
         self.connectbutton.connect("clicked", self.enter_connect)
 
-        # Status bar
+        # Status bar w/ progress spinner
+        self.spinner = Gtk.Spinner()
         self.status_bar = Gtk.Statusbar()
 
         # Frame for box provides a border for the grid
@@ -425,8 +432,9 @@ Useful for diagnosing connection problems''')
         if unity is True:
             self.create_unity_quicklist()
 
-    # If a geometry percentage is given, let's figure out the actual resolution
     def geo_percent(self, geometry):
+        # If a geometry percentage is given, let's figure out the actual resolution
+        #
         # Remove the percent symbol from our value
         cleangeo = int(re.sub('[^0-9]', '', geometry))
         # Get the screen from the GtkWindow
@@ -443,27 +451,29 @@ Useful for diagnosing connection problems''')
         height = int(round(cleangeo * mongeometry.height))
         return "%sx%s" % (width, height)
 
-    # Each section in the config file gets an entry in the host combobox
     def populate_host_combobox(self):
+        # Each non-default section in the config file gets an entry in the host
+        # combobox
         self.host_combo_store.clear()
         for host in self.rd.saved_hosts:
             if host != 'DEFAULT':
                 self.host_combo_store.append([host])
 
-    # Each section in the config file gets an entry in the Unity quicklist
     def populate_unity_quicklist(self):
+        # Each non-default section in the config file gets an entry in the
+        # Unity quicklist
         for host in self.rd.saved_hosts:
             self.update_unity_quicklist(host)
 
-    # Create the Unity quicklist and populate it with our hosts
     def create_unity_quicklist(self):
+        # Create the Unity quicklist and populate it with our hosts
         entry = Unity.LauncherEntry.get_for_desktop_id("rocket-depot.desktop")
         self.quicklist = Dbusmenu.Menuitem.new()
         self.populate_unity_quicklist()
         entry.set_property("quicklist", self.quicklist)
 
-    # Append a new host to the Unity quicklist
     def update_unity_quicklist(self, host):
+        # Append a new host to the Unity quicklist
         if host != 'DEFAULT':
             host_menu_item = Dbusmenu.Menuitem.new()
             host_menu_item.property_set(Dbusmenu.MENUITEM_PROP_LABEL,
@@ -474,20 +484,24 @@ Useful for diagnosing connection problems''')
                                    host)
             self.quicklist.child_append(host_menu_item)
 
-    # If we delete a host we must delete all Unity quicklist entries and
-    # rebuild the quicklist
     def clean_unity_quicklist(self):
+        # If we delete a host we must delete all Unity quicklist entries and
+        # rebuild the quicklist
         for x in self.quicklist.get_children():
             self.quicklist.child_delete(x)
         self.populate_unity_quicklist()
 
     def start_thread(self):
+        # Start a thread so that the UI can continue to function while we try
+        # to connect.
+        #
         # Throw an error if the required host field is empty
         if not self.rd.options['host']:
             self.on_warn(None, 'No Host', 'No Host or IP Address Given')
         else:
             self.status_bar.push(0, 'Connecting to "' +
                                  self.rd.options['host'] + '" ...')
+            # Disable the UI while we connect
             self.host_combo.set_sensitive(False)
             self.userentry.set_sensitive(False)
             self.geometryentry.set_sensitive(False)
@@ -509,19 +523,21 @@ Useful for diagnosing connection problems''')
             thread = WorkerThread(self.work_finished_cb, cmdline)
             thread.start()
 
-    # Triggered when a host is selected via the Unity quicklist
     def on_unity_clicked(self, widget, entry, host):
+        # Triggered when a host is selected via the Unity quicklist
         self.rd.read_config(host)
         self.start_thread()
 
-    # Trigged when we press 'Enter' or the 'Connect' button
     def enter_connect(self, *args):
+        # Trigged when we press 'Enter' or the 'Connect' button
         self.grab_textboxes()
         self.start_thread()
 
     def work_finished_cb(self):
+        # Called when the connection attempt is over
         self.status_bar.pop(0)
         self.spinner.stop()
+        # Make the UI clickable again
         self.host_combo.set_sensitive(True)
         self.userentry.set_sensitive(True)
         self.geometryentry.set_sensitive(True)
@@ -534,6 +550,7 @@ Useful for diagnosing connection problems''')
         self.terminalbutton.set_sensitive(True)
         self.connectbutton.set_sensitive(True)
         self.menubar.set_sensitive(True)
+        # Get ready to show errors if needed
         error_text = WorkerThread.error_text
         return_code = WorkerThread.return_code
         return_code_ignore = [62, 255]
@@ -548,9 +565,11 @@ Useful for diagnosing connection problems''')
             self.on_warn(None, 'Connection Error', '%s: \n'
                          % self.rd.options['program'] + error_text)
 
-    # Triggered when the combobox is clicked.  We load the selected host
-    # from the config file.
     def on_host_combo_changed(self, combo):
+        # Triggered when the combobox is clicked.  We load the selected host
+        # from the config file.
+        #
+        # This is used when the combobox list is clicked
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
             model = combo.get_model()
@@ -561,6 +580,7 @@ Useful for diagnosing connection problems''')
                     self.load_settings()
             self.rd.options['host'] = name
         else:
+            # Used when text is typed into the combo box
             entry = combo.get_child()
             text = entry.get_text()
             if text in self.rd.saved_hosts:
@@ -570,8 +590,8 @@ Useful for diagnosing connection problems''')
                 self.rd.read_config('DEFAULT')
                 self.load_settings()
 
-    # Triggered when the checkboxes are toggled
     def on_button_toggled(self, button, name):
+        # Triggered when the checkboxes are toggled
         if button.get_active():
             state = 'true'
             self.rd.options[name] = state
@@ -579,13 +599,13 @@ Useful for diagnosing connection problems''')
             state = 'false'
             self.rd.options[name] = state
 
-    # Triggered when the program radio buttons are toggled
     def on_radio_button_toggled(self, button, name):
+        # Triggered when the program radio buttons are toggled
         if button.get_active():
             self.rd.options['program'] = name
 
-    # Triggered when the file menu is used
     def add_file_menu_actions(self, action_group):
+        # Triggered when the file menu is used
         action_filemenu = Gtk.Action(name="FileMenu", label="File",
                                      tooltip=None, stock_id=None)
         action_group.add_action(action_filemenu)
@@ -603,8 +623,8 @@ Useful for diagnosing connection problems''')
                                    "Quit", "<control>Q", None,
                                    self.quit)])
 
-    # Triggered when the help menu is used
     def add_help_menu_actions(self, action_group):
+        # Triggered when the help menu is used
         action_group.add_actions([
             ("Help", None, "Help"),
             ("About", None, "About", None, None, self.on_menu_help_about),
@@ -614,8 +634,8 @@ Useful for diagnosing connection problems''')
              self.on_menu_rdesktop_help),
         ])
 
-    # Needed for the menu bar
     def create_ui_manager(self):
+        # Needed for the menu bar
         uimanager = Gtk.UIManager()
         # Throws exception if something went wrong
         uimanager.add_ui_from_string(self.UI_INFO)
@@ -624,8 +644,8 @@ Useful for diagnosing connection problems''')
         self.add_accel_group(accelgroup)
         return uimanager
 
-    # When the save config button is clicked on the menu bar
     def save_current_config(self, widget):
+        # When the save config button is clicked on the menu bar
         self.grab_textboxes()
         if (self.rd.options['host'] == '' or
                 self.rd.options['host'] == 'DEFAULT'):
@@ -639,8 +659,8 @@ Useful for diagnosing connection problems''')
             if unity is True:
                 self.clean_unity_quicklist()
 
-    # When the delete config button is clicked on the menu bar
     def delete_current_config(self, widget):
+        # When the delete config button is clicked on the menu bar
         if (self.rd.options['host'] == '' or
                 self.rd.options['host'] == 'DEFAULT'):
             self.on_warn(None, 'Select a Saved Host',
@@ -655,39 +675,39 @@ Useful for diagnosing connection problems''')
             if unity is True:
                 self.clean_unity_quicklist()
 
-    # When the save config button is clicked on the menu bar
     def save_current_config_as_default(self, widget):
+        # When the save config button is clicked on the menu bar
         self.grab_textboxes()
         self.rd.save_config('DEFAULT')
         self.status_bar.push(0, 'Default host settings saved')
 
-    # When the quit button is clicked on the menu bar
     def quit(self, widget):
+        # When the quit button is clicked on the menu bar
         Gtk.main_quit()
 
-    # When the help button is clicked on the menu bar
     def on_menu_help_about(self, widget):
+        # When the help button is clicked on the menu bar
         self.on_about(widget)
 
-    # When the FreeRDP help button is clicked on the menu bar
     def on_menu_xfreerdp_help(self, widget):
+        # When the FreeRDP help button is clicked on the menu bar
         url = "https://github.com/FreeRDP/FreeRDP/wiki/CommandLineInterface"
         webbrowser.open_new_tab(url)
 
-    # When the rdesktop help button is clicked on the menu bar
     def on_menu_rdesktop_help(self, widget):
+        # When the rdesktop help button is clicked on the menu bar
         url = "http://linux.die.net/man/1/rdesktop"
         webbrowser.open_new_tab(url)
 
-    # Grab all textbox input
     def grab_textboxes(self):
+        # Grab all textbox input
         self.rd.options['host'] = self.host_entry.get_text()
         self.rd.options['user'] = self.userentry.get_text()
         self.rd.options['geometry'] = self.geometryentry.get_text()
         self.rd.options['clioptions'] = self.clioptionsentry.get_text()
 
-    # Generic warning dialog
     def on_warn(self, widget, title, message):
+        # Generic warning dialog
         dialog = Gtk.MessageDialog(transient_for=self, flags=0,
                                    message_type=Gtk.MessageType.WARNING,
                                    buttons=Gtk.ButtonsType.OK, text=title,
@@ -696,8 +716,8 @@ Useful for diagnosing connection problems''')
         dialog.run()
         dialog.destroy()
 
-    # About dialog
     def on_about(self, widget):
+        # About dialog
         about = Gtk.AboutDialog()
         about.set_program_name("Rocket Depot")
         about.set_version("0.24")
@@ -709,8 +729,8 @@ Useful for diagnosing connection problems''')
         about.run()
         about.destroy()
 
-    # Load all settings
     def load_settings(self):
+        # Load all settings into the UI
         self.userentry.set_text(self.rd.options['user'])
         self.geometryentry.set_text(self.rd.options['geometry'])
         self.clioptionsentry.set_text(self.rd.options['clioptions'])
@@ -737,6 +757,7 @@ Useful for diagnosing connection problems''')
         self.status_bar_load_host()
 
     def status_bar_load_host(self):
+        # Notify via the status bar when we're loading or saving hosts
         if (self.rd.options['host'] == '' or
                 self.rd.options['host'] == 'DEFAULT'):
             self.status_bar.push(0, 'Default host settings loaded')
@@ -746,6 +767,7 @@ Useful for diagnosing connection problems''')
 
 
 def _main():
+    # Create the main program instance and the UI
     rocket_depot = RocketDepot()
     window = MainWindow(rocket_depot)
     window.connect("delete-event", Gtk.main_quit)
