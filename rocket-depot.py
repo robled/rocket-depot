@@ -164,7 +164,7 @@ Usage: rocket-depot [--debug]
         # This makes the next bit a little cleaner name-wise
         client = self.options['program']
         # List of commandline paramenters for our RDP client
-        params = []
+        params = list()
         # Add standard options to the parameter list
         for x in client_opts[client]['stdopts']:
             params.append(x)
