@@ -720,7 +720,7 @@ Useful for diagnosing connection problems''')
         # About dialog
         about = Gtk.AboutDialog()
         about.set_program_name("Rocket Depot")
-        about.set_version("0.24")
+        about.set_version("0.25")
         about.set_copyright("2014 David Roble")
         about.set_comments("rdesktop/xfreerdp Frontend")
         about.set_website("https://github.com/robled/rocket-depot")
