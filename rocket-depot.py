@@ -40,9 +40,10 @@ class RocketDepot:
         }
         # Local user homedir and config directory
         self.homedir = os.environ['HOME']
+        self.config_dir = os.path.join(self.homedir, '.config', 'rocket-depot')
         self.create_config_dir()
         # Our config dotfile which we will load
-        self.configfile = '%s/.config/rocket-depot/config.ini' % self.homedir
+        self.configfile = os.path.join(self.config_dir, 'config.ini')
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.configfile)
         self.read_config('DEFAULT')
@@ -70,10 +71,9 @@ Usage: rocket-depot [--debug]
 
     def create_config_dir(self):
         # Create config file directory if necessary
-        configdir = '%s/.config/rocket-depot' % self.homedir
-        if not os.path.exists(configdir):
+        if not os.path.exists(self.config_dir):
             try:
-                os.mkdir(configdir, 0700)
+                os.mkdir(self.config_dir, 0700)
             except OSError:
                 if self.debug:
                     print 'Error:  Unable to create config directory.'
@@ -123,7 +123,7 @@ Usage: rocket-depot [--debug]
 
     def check_known_hosts(self, host):
         # Check for given host in freerdp's known_hosts file before connecting
-        known_hosts = '%s/.config/freerdp/known_hosts' % self.homedir
+        known_hosts = os.path.join(self.homedir, '.config', 'freerdp', 'known_hosts')
         try:
             with open(known_hosts, 'r') as f:
                 read_data = f.read()
@@ -257,6 +257,7 @@ class MainWindow(Gtk.Window):
         self.set_wmclass('rocket-depot', 'rocket-depot')
         self.program_icon = GdkPixbuf.Pixbuf.new_from_file("/usr/share/icons/hicolor/scalable/apps/rocket-depot.svg")
         self.set_icon(self.program_icon)
+        self.set_titlebar()
 
         # Menu bar layout
         self.UI_INFO = """
