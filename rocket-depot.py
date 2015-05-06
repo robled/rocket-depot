@@ -561,7 +561,6 @@ Useful for diagnosing connection problems''')
         # return code 255 is not used by rdesktop
         if return_code is not 0 and return_code not in return_code_ignore:
             # discard extra data from long error messages
-            print len(error_text)
             if len(error_text) == 0:
                 error_text = '''Unable to retrieve error message from CLI application.
 Please try again using the "Terminal" option.'''
