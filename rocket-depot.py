@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.7
 
+import distutils.spawn
+import gi
 import os
 import re
 import shlex
@@ -9,6 +11,8 @@ import threading
 import time
 import webbrowser
 import ConfigParser
+gi.require_version('GdkPixbuf', '2.0')
+gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, GdkPixbuf, Gtk
 # Import special features if we're running Ubuntu Unity
 if (os.environ.get('DESKTOP_SESSION') == 'ubuntu' or
@@ -123,7 +127,8 @@ Usage: rocket-depot [--debug]
 
     def check_known_hosts(self, host):
         # Check for given host in freerdp's known_hosts file before connecting
-        known_hosts = os.path.join(self.homedir, '.config', 'freerdp', 'known_hosts')
+        known_hosts = os.path.join(self.homedir, '.config', 'freerdp',
+                                   'known_hosts')
         try:
             with open(known_hosts, 'r') as f:
                 read_data = f.read()
@@ -142,7 +147,8 @@ Usage: rocket-depot [--debug]
         # stdopts are always used.
         client_opts = {
             'rdesktop': {
-                'stdopts': ['rdesktop', '-a16'],
+                'stdopts': [distutils.spawn.find_executable('rdesktop'),
+                            '-a16'],
                 'host': '',
                 'user': '-u',
                 'geometry': '-g',
@@ -151,7 +157,8 @@ Usage: rocket-depot [--debug]
                 'fullscreen': '-f'
             },
             'xfreerdp': {
-                'stdopts': ['xfreerdp', '+clipboard'],
+                'stdopts': [distutils.spawn.find_executable('xfreerdp'),
+                            '+clipboard'],
                 'host': '/v:',
                 'user': '/u:',
                 'geometry': '/size:',
@@ -180,11 +187,11 @@ Usage: rocket-depot [--debug]
         if self.options['geometry'] != '':
             geo = client_opts[client]['geometry']
             if self.options['geometry'].find('%') == -1:
-                params.append(geo
-                              + '%s' % str.strip(self.options['geometry']))
+                params.append(geo +
+                              '%s' % str.strip(self.options['geometry']))
             else:
-                params.append(geo
-                              + self.mw.geo_percent(self.options['geometry']))
+                params.append(geo +
+                              self.mw.geo_percent(self.options['geometry']))
         if self.options['fullscreen'] == 'true':
             params.append(client_opts[client]['fullscreen'])
         if self.options['grabkeyboard'] == 'false':
@@ -194,8 +201,8 @@ Usage: rocket-depot [--debug]
         if self.options['clioptions'] != '':
             params.append(self.options['clioptions'])
         # Hostname goes last in the list of parameters
-        params.append(client_opts[client]['host']
-                      + '%s' % str.strip(self.options['host']))
+        params.append(client_opts[client]['host'] +
+                      '%s' % str.strip(self.options['host']))
         # Clean up params list to make it shell compliant
         cmdline = shlex.split(' '.join(params))
         # Add an xterm to the command line if needed
@@ -213,7 +220,7 @@ Usage: rocket-depot [--debug]
                 for x in reversed(terminal_args):
                     cmdline.insert(0, x)
         # FreeRDP needs input for certain CLI options
-        if cmdline[0] == 'xfreerdp':
+        if 'xfreerdp' in cmdline[0]:
             if '-sec-nla' not in cmdline:
                 prepend_terminal()
             if ('/cert-ignore' not in cmdline and
@@ -255,7 +262,8 @@ class MainWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="Rocket Depot", resizable=0)
         self.set_border_width(0)
         self.set_wmclass('rocket-depot', 'rocket-depot')
-        self.program_icon = GdkPixbuf.Pixbuf.new_from_file("/usr/share/icons/hicolor/scalable/apps/rocket-depot.svg")
+        icon = '/usr/share/icons/hicolor/scalable/apps/rocket-depot.svg'
+        self.program_icon = GdkPixbuf.Pixbuf.new_from_file(icon)
         self.set_icon(self.program_icon)
         self.set_titlebar()
 
@@ -296,10 +304,12 @@ class MainWindow(Gtk.Window):
         # Host combobox
         self.host_combo_store = Gtk.ListStore(str)
         self.populate_host_combobox()
-        self.host_combo = Gtk.ComboBox.new_with_model_and_entry(self.host_combo_store)
+        self.host_combo = Gtk.ComboBox.new_with_model_and_entry(
+            self.host_combo_store)
         self.host_combo.connect("changed", self.on_host_combo_changed)
         self.host_combo.set_entry_text_column(0)
-        self.host_combo.set_tooltip_text('Enter hostname/IP or list saved hosts')
+        self.host_combo.set_tooltip_text(
+            'Enter hostname/IP or list saved hosts')
         self.host_entry = self.host_combo.get_child()
         # Auto-complete
         completion = Gtk.EntryCompletion()
@@ -331,10 +341,12 @@ e.g. "1024x768" or "80%"''')
                                      self.enter_connect, self.clioptionsentry)
 
         # Radio button for program selection
-        self.xfreerdpbutton = Gtk.RadioButton.new_with_label_from_widget(None, "FreeRDP")
+        self.xfreerdpbutton = Gtk.RadioButton.new_with_label_from_widget(
+            None, "FreeRDP")
         self.xfreerdpbutton.connect("toggled", self.on_radio_button_toggled,
                                     "xfreerdp")
-        self.rdesktopbutton = Gtk.RadioButton.new_from_widget(self.xfreerdpbutton)
+        self.rdesktopbutton = Gtk.RadioButton.new_from_widget(
+            self.xfreerdpbutton)
         self.rdesktopbutton.set_label("rdesktop")
         self.rdesktopbutton.connect("toggled", self.on_radio_button_toggled,
                                     "rdesktop")
@@ -434,7 +446,8 @@ Useful for diagnosing connection problems''')
             self.create_unity_quicklist()
 
     def geo_percent(self, geometry):
-        # If a geometry percentage is given, let's figure out the actual resolution
+        # If a geometry percentage is given, let's figure out the actual
+        # resolution
         #
         # Remove the percent symbol from our value
         cleangeo = int(re.sub('[^0-9]', '', geometry))
@@ -724,6 +737,7 @@ Please try again using the "Terminal" option.'''
     def on_about(self, widget):
         # About dialog
         about = Gtk.AboutDialog()
+        about.set_transient_for(self)
         about.set_program_name("Rocket Depot")
         about.set_version("0.25")
         about.set_copyright("2014 David Roble")
