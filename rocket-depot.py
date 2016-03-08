@@ -128,7 +128,7 @@ Usage: rocket-depot [--debug]
     def check_known_hosts(self, host):
         # Check for given host in freerdp's known_hosts file before connecting
         known_hosts = os.path.join(self.homedir, '.config', 'freerdp',
-                                   'known_hosts')
+                                   'known_hosts2')
         try:
             with open(known_hosts, 'r') as f:
                 read_data = f.read()
