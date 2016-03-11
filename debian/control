@@ -1,0 +1,18 @@
+Source: rocket-depot
+Section: net
+Priority: optional
+Maintainer: David Roble <robled@electronsweatshop.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.6
+X-Python-Version: 2.7
+Homepage: https://github.com/robled/rocket-depot
+Vcs-Git: https://github.com/robled/rocket-depot.git
+Vcs-Browser: https://github.com/robled/rocket-depot
+
+Package: rocket-depot
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, gir1.2-gtk-3.0, rdesktop, freerdp-x11, libfreerdp-plugins-standard, xterm
+Description: An rdesktop/xfreerdp frontend
+ Rocket Depot is a simple graphical frontend for rdesktop and FreeRDP with
+ support for connection profiles. It runs on Linux desktops using GTK and takes
+ advantage of modern desktop environment features such as Unity Quicklists.
