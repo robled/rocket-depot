@@ -1,5 +1,5 @@
-rocket-depot (1.0.0-1) UNRELEASED; urgency=medium
+rocket-depot (1.0.0-1.0) stable; urgency=low
 
-  * Initial release.
+  * Initial release. (NMU)
 
- --  <robled@electronsweatshop.com>  Thu, 10 Mar 2016 19:23:10 -0500
+ --  David Roble <robled@electronsweatshop.com>  Thu, 10 Mar 2016 19:23:10 -0500

@@ -47,3 +47,6 @@
   - Added status bar
   - Improved look of menu bar for certain configurations
   - Bugfix for saved host deletion
+
+1.0.0 (March 11th, 2016)
+  - Proper distro packages

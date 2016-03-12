@@ -4,8 +4,6 @@ import subprocess
 from distutils.log import warn, info, error
 from setuptools import setup, find_packages
 
-shutil.copyfile('rocket-depot.py', 'rocket-depot')
-
 setup(
     name = 'rocket-depot',
     version = '0.25',

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-littlev=$(grep Debian-Version stdeb.cfg | awk {'print $2'})
-bigv=$(grep version setup.py | awk {'print $3'} | cut -c 2-5)
-cleanlist=('deb_dist' 'rocket_depot.egg-info' 'dist' 'rocket-depot')
+#littlev=$(grep Debian-Version stdeb.cfg | awk {'print $2'})
+#bigv=$(grep version setup.py | awk {'print $3'} | cut -c 2-5)
+#cleanlist=('deb_dist' 'rocket_depot.egg-info' 'dist' 'rocket-depot')
 
 function clean {
     for i in "${cleanlist[@]}"
@@ -14,16 +14,23 @@ function clean {
 
 
 function build {
-    clean
-    python setup.py --command-packages=stdeb.command sdist_dsc
-    cd deb_dist
-    dpkg-source -x rocket-depot_$bigv-$littlev.dsc
-    cd rocket-depot-$bigv
-    debuild -S -sa
-    echo
-    echo 'To upload to PPA/pypi, copypasta:'
-    echo "dput rocket-depot deb_dist/rocket-depot_"$bigv"-"$littlev"_source.changes"
-    echo 'python setup.py sdist upload -r https://pypi.python.org/pypi --sign'
+    build_dir='/tmp/rocket-depot_build'
+    rm -rf  "$build_dir"
+    mkdir -p "${build_dir}/build"
+    tar czf "${build_dir}/rocket-depot_1.0.0.orig.tar.gz" .
+    cd "${build_dir}/build"
+    tar xzf ../rocket-depot_1.0.0.orig.tar.gz
+    debuild -us -uc
+    #clean
+    #python setup.py --command-packages=stdeb.command sdist_dsc
+    #cd deb_dist
+    #dpkg-source -x rocket-depot_$bigv-$littlev.dsc
+    #cd rocket-depot-$bigv
+    #debuild -S -sa
+    #echo
+    #echo 'To upload to PPA/pypi, copypasta:'
+    #echo "dput rocket-depot deb_dist/rocket-depot_"$bigv"-"$littlev"_source.changes"
+    #echo 'python setup.py sdist upload -r https://pypi.python.org/pypi --sign'
 }
 
 
