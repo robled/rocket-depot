@@ -1,0 +1,6 @@
+[rocket-depot_trusty]
+fqdn = ppa.launchpad.net
+method = ftp
+incoming = ~robled/rocket-depot/ubuntu/trusty
+login = anonymous
+allow_unsigned_uploads = 0

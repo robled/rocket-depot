@@ -2,48 +2,35 @@
 
 #littlev=$(grep Debian-Version stdeb.cfg | awk {'print $2'})
 #bigv=$(grep version setup.py | awk {'print $3'} | cut -c 2-5)
-#cleanlist=('deb_dist' 'rocket_depot.egg-info' 'dist' 'rocket-depot')
-
-function clean {
-    for i in "${cleanlist[@]}"
-    do
-        echo "cleaning $i if it exists"
-        rm -rf $i
-    done
-}
 
 
-function build {
-    build_dir='/tmp/rocket-depot_build'
-    rm -rf  "$build_dir"
-    mkdir -p "${build_dir}/build"
-    tar czf "${build_dir}/rocket-depot_1.0.0.orig.tar.gz" .
-    cd "${build_dir}/build"
-    tar xzf ../rocket-depot_1.0.0.orig.tar.gz
-    debuild -us -uc
-    #clean
-    #python setup.py --command-packages=stdeb.command sdist_dsc
-    #cd deb_dist
-    #dpkg-source -x rocket-depot_$bigv-$littlev.dsc
-    #cd rocket-depot-$bigv
-    #debuild -S -sa
-    #echo
-    #echo 'To upload to PPA/pypi, copypasta:'
-    #echo "dput rocket-depot deb_dist/rocket-depot_"$bigv"-"$littlev"_source.changes"
-    #echo 'python setup.py sdist upload -r https://pypi.python.org/pypi --sign'
-}
+
+build_dir='/tmp/rocket-depot_build'
+rm -rf  "$build_dir"
+mkdir -p "${build_dir}/build"
+tar czf "${build_dir}/rocket-depot_1.0.0.orig.tar.gz" .
+cd "${build_dir}/build"
+tar xzf ../rocket-depot_1.0.0.orig.tar.gz
+# Ubuntu wants -S for source packages only
+debuild -S -krobled@electronsweatshop.com
+cd ../
+# debsign rocket-depot_1.0.0-1.0_source.changes
+dpkg-source -x rocket-depot_1.0.0-1.0.dsc
 
 
-case "$1" in
-        build)
-            build
-            ;;
+# make switches for all this
 
-        clean)
-            clean
-            ;;
-        *)
-            echo $"Usage: $0 {build|clean}"
-            exit 1
+echo
+read -p "Upload to Ubuntu PPA? " -n 1 -r
+echo    # (optional) move to a new line
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    pushd "$build_dir" && dput rocket-depot_trusty rocket-depot_1.0.0-1.0_source.changes; popd
+fi
 
-esac
+read -p "Upload to pypi? " -n 1 -r
+echo    # (optional) move to a new line
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    pushd "$build_dir" && python setup.py sdist upload -r https://pypi.python.org/pypi --sign; popd
+fi
