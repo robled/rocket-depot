@@ -10,6 +10,11 @@ Quicklists.
 
 #### Installation
 
+##### [Arch Linux AUR](https://aur.archlinux.org/packages/rocket-depot-git/)
+    git clone https://aur.archlinux.org/rocket-depot-git.git
+    cd rocket-depot-git
+    makepkg -si
+
 ##### [Ubuntu PPA](https://launchpad.net/~robled/+archive/rocket-depot)
     sudo apt-add-repository ppa:robled/rocket-depot
     sudo apt-get update
@@ -17,5 +22,5 @@ Quicklists.
 
 ##### [PyPI](https://pypi.python.org/pypi/rocket-depot)
     sudo pip install rocket-depot
-    
+
 #### [Changelog](https://github.com/robled/rocket-depot/blob/master/CHANGES.txt)
