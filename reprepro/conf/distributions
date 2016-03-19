@@ -1,0 +1,7 @@
+Origin: rocket-depot
+Label: rocket-depot
+Codename: jessie
+Architectures: amd64 i386
+Components: main
+Description: Apt repository for rocket-depot
+SignWith: 1683174C
