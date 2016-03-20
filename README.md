@@ -15,7 +15,12 @@ Quicklists.
     cd rocket-depot-git
     makepkg -si
 
-##### [Ubuntu PPA](https://launchpad.net/~robled/+archive/rocket-depot)
+##### [Debian Jessie](http://packages.scottlinux.com/)
+    sudo wget -O - http://packages.scottlinux.com//robled.gpg.key | apt-key add -
+    sudo echo 'deb http://packages.scottlinux.com/ jessie main' > /etc/apt/sources.list.d/rocket-depot.list
+    sudo apt-get update && sudo apt-get install rocket-depot
+
+##### [Ubuntu PPA for Trusty and Wily](https://launchpad.net/~robled/+archive/rocket-depot)
     sudo apt-add-repository ppa:robled/rocket-depot
     sudo apt-get update
     sudo apt-get install rocket-depot
