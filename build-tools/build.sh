@@ -20,7 +20,7 @@ cd ../
 dpkg-sig -p --sign builder rocket-depot_1.0.0-1.0_all.deb
 # this might not be necessary
 # dpkg-source -x rocket-depot_1.0.0-1.0.dsc -krobled@electronsweatshop.com
-# fedora here
+# fedora here, COPR doesn't care about signing
 # rpmbuild -ba --sign rpmbuild/SPECS/rocket-depot.spec
 
 

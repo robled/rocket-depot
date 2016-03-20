@@ -31,18 +31,11 @@ advantage of modern desktop environment features such as Unity Quicklists.
 %files -n rocket-depot
 %license LICENSE.md
 %doc README.txt
+%{python2_sitelib}/rocket_depot-%{version}-py2.7.egg-info
 %{_bindir}/rocket-depot
 %{_prefix}/share/applications/rocket-depot.desktop
 %{_prefix}/share/icons/hicolor/*/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/128x128/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/16x16/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/22x22/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/24x24/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/256x256/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/32x32/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/48x48/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/64x64/apps/rocket-depot.png
-#%{_prefix}/share/icons/hicolor/scalable/apps/rocket-depot.svg
+%{_prefix}/share/icons/hicolor/scalable/apps/rocket-depot.svg
 
 
 %changelog
