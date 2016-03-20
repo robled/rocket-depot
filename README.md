@@ -16,7 +16,7 @@ Quicklists.
     makepkg -si
 
 ##### [Debian Jessie](http://packages.scottlinux.com/)
-    sudo wget -O - http://packages.scottlinux.com/robled.gpg.key | apt-key add -
+    sudo wget -O - http://packages.scottlinux.com/robled.gpg.key | sudo apt-key add -
     sudo echo 'deb http://packages.scottlinux.com/ jessie main' > /etc/apt/sources.list.d/rocket-depot.list
     sudo apt-get update && sudo apt-get install rocket-depot
 
