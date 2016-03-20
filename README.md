@@ -10,7 +10,7 @@ Quicklists.
 
 #### Installation
 
-##### [Arch Linux AUR](https://aur.archlinux.org/packages/rocket-depot-git/)
+##### [Arch Linux](https://aur.archlinux.org/packages/rocket-depot-git/)
     git clone https://aur.archlinux.org/rocket-depot-git.git
     cd rocket-depot-git
     makepkg -si
@@ -20,7 +20,11 @@ Quicklists.
     echo 'deb http://packages.scottlinux.com/ jessie main' | sudo tee /etc/apt/sources.list.d/rocket-depot.list
     sudo apt-get update && sudo apt-get install rocket-depot
 
-##### [Ubuntu PPA for Trusty and Wily](https://launchpad.net/~robled/+archive/rocket-depot)
+##### [Fedora](https://copr.fedorainfracloud.org/coprs/robled/rocket-depot/)
+    sudo dnf copr enable robled/rocket-depot
+    sudo dnf install rocket-depot
+
+##### [Ubuntu Trusty/Wily](https://launchpad.net/~robled/+archive/rocket-depot)
     sudo apt-add-repository ppa:robled/rocket-depot
     sudo apt-get update
     sudo apt-get install rocket-depot
