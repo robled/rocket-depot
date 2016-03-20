@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=rdesktop
-Exec=rdesktop
-Icon=tsclient
-Categories=Network;Application
-StartupWMClass=rdesktop
