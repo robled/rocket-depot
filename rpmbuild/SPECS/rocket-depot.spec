@@ -35,7 +35,8 @@ advantage of modern desktop environment features such as Unity Quicklists.
 %doc README.txt
 %{python2_sitelib}/*
 %{_bindir}/*
-%{_prefix}/*
+%{_prefix}/share/applications/*
+%{_prefix}/share/icons/*
 
 
 %changelog
