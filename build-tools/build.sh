@@ -21,7 +21,7 @@ dpkg-sig -p --sign builder rocket-depot_1.0.0-1.0_all.deb
 # this might not be necessary
 # dpkg-source -x rocket-depot_1.0.0-1.0.dsc -krobled@electronsweatshop.com
 # fedora here
-# rpmbuild -ba rpmbuild/SPECS/rocket-depot.spec
+# rpmbuild -ba --sign rpmbuild/SPECS/rocket-depot.spec
 
 
 # make switches for all this
