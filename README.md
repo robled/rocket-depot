@@ -1,6 +1,6 @@
 #### Rocket Depot
 Rocket Depot is a simple graphical frontend for [rdesktop](http://www.rdesktop.org/) and [FreeRDP](http://www.freerdp.com/) with
-support for connection profiles.  It runs on Linux desktops using GTK and
+support for connection profiles.  It runs on Linux desktops using GTK+ 3 and
 takes advantage of modern desktop environment features such as Unity
 Quicklists.
 
