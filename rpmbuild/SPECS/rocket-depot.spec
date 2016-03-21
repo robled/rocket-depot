@@ -2,7 +2,7 @@ Name: rocket-depot
 Version: 1.0.0
 Release: 1%{?dist}
 Summary: GTK+ 3 rdesktop/xfreerdp frontend
-License: GPLv3+
+License: GPLv3
 URL: https://github.com/robled/rocket-depot
 Source0: https://github.com/robled/rocket-depot/archive/%{version}.tar.gz
 BuildArch: noarch
