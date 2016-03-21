@@ -30,12 +30,12 @@ Quicklists.
     sudo apt-get install rocket-depot
 
 ##### [PyPI](https://pypi.python.org/pypi/rocket-depot)
+    sudo pip install rocket-depot
 Install the following packages for your distro:
 * pygobject3 
 * hicolor-icon-theme 
 * xterm 
 * freerdp 
 * rdesktop
-    sudo pip install rocket-depot
 
 #### [Changelog](https://github.com/robled/rocket-depot/blob/master/CHANGES.txt)
