@@ -7,7 +7,7 @@ URL: https://github.com/robled/rocket-depot
 Source0: https://github.com/robled/rocket-depot/archive/%{version}.tar.gz
 BuildArch: noarch
 BuildRequires: python2-devel
-Requires: pygobject3 xterm freerdp rdesktop
+Requires: pygobject3 hicolor-icon-theme xterm freerdp rdesktop
 
 
 %description

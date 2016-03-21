@@ -11,7 +11,7 @@ Vcs-Browser: https://github.com/robled/rocket-depot
 
 Package: rocket-depot
 Architecture: all
-Depends: gir1.2-gtk-3.0, rdesktop, freerdp-x11, libfreerdp-plugins-standard, xterm, ${misc:Depends}, ${python:Depends}
+Depends: gir1.2-gtk-3.0, hicolor-icon-theme, rdesktop, freerdp-x11, libfreerdp-plugins-standard, xterm, ${misc:Depends}, ${python:Depends}
 Description: GTK+ 3 rdesktop/xfreerdp frontend
  Rocket Depot is a simple graphical frontend for rdesktop and FreeRDP with
  support for connection profiles. It runs on Linux desktops using GTK+ 3 and takes
