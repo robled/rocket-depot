@@ -21,7 +21,6 @@ Quicklists.
     sudo apt-get update && sudo apt-get install rocket-depot
 
 ##### [Fedora](https://copr.fedorainfracloud.org/coprs/robled/rocket-depot/)
-    sudo dnf copr enable robled/rocket-depot
     sudo dnf install rocket-depot
 
 ##### [Ubuntu Trusty/Wily](https://launchpad.net/~robled/+archive/rocket-depot)
