@@ -8,7 +8,7 @@ arch=('any')
 url="https://github.com/robled/rocket-depot"
 license=('GPL3')
 depends=('python2-setuptools' 'xterm' 'hicolor-icon-theme',
-         'rdesktop' 'freerdp' 'python2-gobject2')
+         'rdesktop' 'freerdp' 'python2-gobject2' 'python2-gobject')
 makedepends=('git')
 provides=('rocket-depot-git')
 conflicts=('rocket-depot-git')
